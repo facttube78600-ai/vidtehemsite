@@ -266,6 +266,19 @@
               <input type="text" id="fKw" placeholder="e.g. waterfalls, rainforest, nature" />
               <label for="fFocus">Focus Keyword</label>
               <input type="text" id="fFocus" placeholder="e.g. hidden waterfalls rainforest" />
+              <h3>Social Sharing (Open Graph / Twitter)</h3>
+              <label for="fOgTitle">OG Title</label>
+              <input type="text" id="fOgTitle" maxlength="200" placeholder="Defaults to the SEO title" />
+              <label for="fOgDesc">OG Description</label>
+              <textarea id="fOgDesc" rows="2" maxlength="300" placeholder="Defaults to the meta description"></textarea>
+              <label for="fOgImg">OG Image URL</label>
+              <input type="text" id="fOgImg" placeholder="Defaults to the thumbnail — assets/thumbs/… or https://…" />
+              <label for="fTwCard">Twitter Card</label>
+              <select id="fTwCard"><option value="summary_large_image">Large image</option><option value="summary">Summary (small image)</option></select>
+              <label for="fCanon">Canonical URL</label>
+              <input type="text" id="fCanon" placeholder="Auto: https://vidtehemsite.pages.dev/video/slug-id.html" />
+              <h3>Social Preview</h3>
+              <div class="serp" id="socialPrev"><div class="t" id="socTitle"></div><div class="u" id="socUrl"></div><div class="d" id="socDesc"></div></div>
               <h3>Google Preview</h3>
               <div class="serp"><div class="t" id="serpTitle"></div><div class="u" id="serpUrl"></div><div class="d" id="serpDesc"></div></div>
               <h3>JSON-LD Preview (VideoObject schema)</h3>
@@ -331,7 +344,7 @@
           <h2>All Videos — Meta</h2>
           <div style="overflow-x:auto">
             <table>
-              <thead><tr><th>Title</th><th>SEO Title</th><th>Meta Description</th><th>Meta Keywords</th><th></th></tr></thead>
+              <thead><tr><th>Title</th><th>SEO Title</th><th>Meta Description</th><th>Meta Keywords</th><th>OG Title</th><th></th></tr></thead>
               <tbody id="metaList"></tbody>
             </table>
           </div>
@@ -541,8 +554,9 @@
         "<td>" + esc(trunc(v.seo_title, 60)) + "</td>" +
         "<td>" + esc(trunc(v.meta_description, 80)) + "</td>" +
         "<td>" + esc(trunc(v.meta_keywords, 60)) + "</td>" +
+        "<td>" + esc(trunc(v.og_title || v.seo_title, 60)) + "</td>" +
         '<td><button class="btn-ghost btn-sm" data-edit="' + v.id + '" data-scroll="seo" type="button">Edit</button></td></tr>';
-    }).join("") || '<tr><td colspan="5">No videos yet.</td></tr>';
+    }).join("") || '<tr><td colspan="6">No videos yet.</td></tr>';
   }
 
   /* ---------------- Editor ---------------- */
@@ -581,7 +595,12 @@
       seo_title: $("fSeo").value.trim(),
       meta_description: $("fMeta").value.trim(),
       meta_keywords: $("fKw").value.trim(),
-      focus_keyword: $("fFocus").value.trim()
+      focus_keyword: $("fFocus").value.trim(),
+      og_title: $("fOgTitle").value.trim(),
+      og_description: $("fOgDesc").value.trim(),
+      og_image: $("fOgImg").value.trim(),
+      twitter_card: $("fTwCard").value,
+      canonical: $("fCanon").value.trim()
     };
   }
 
@@ -618,12 +637,15 @@
     $("serpTitle").textContent = d.seoTitle || "Video title";
     $("serpUrl").textContent = url;
     $("serpDesc").textContent = v.meta_description || storeGet(LS_DEFMETA) || "No meta description yet.";
+    $("socTitle").textContent = v.og_title || d.seoTitle || "Video title";
+    $("socUrl").textContent = v.canonical || url;
+    $("socDesc").textContent = v.og_description || v.meta_description || storeGet(LS_DEFMETA) || "No description yet.";
     $("ldPrev").textContent = JSON.stringify({
       "@context": "https://schema.org",
       "@type": "VideoObject",
       name: v.title || "Video title",
       description: v.meta_description || "",
-      thumbnailUrl: v.thumbnail || "",
+      thumbnailUrl: v.og_image || v.thumbnail || "",
       uploadDate: v.date || today(),
       embedUrl: v.embed_url || ""
     }, null, 2);
@@ -632,7 +654,8 @@
   function refreshForm() { updatePreview(); updateSeo(); }
 
   ["fTitle", "fDuration", "fThumb", "fEmbed"].forEach(function (id) { $(id).addEventListener("input", refreshForm); });
-  ["fSeo", "fMeta", "fKw", "fFocus", "fSlug", "fDate"].forEach(function (id) { $(id).addEventListener("input", refreshForm); });
+  ["fSeo", "fMeta", "fKw", "fFocus", "fSlug", "fDate", "fOgTitle", "fOgDesc", "fOgImg", "fCanon"].forEach(function (id) { $(id).addEventListener("input", refreshForm); });
+  $("fTwCard").addEventListener("change", refreshForm);
   $("fTitle").addEventListener("input", function () {
     if (!slugTouched) $("fSlug").value = slugify($("fTitle").value);
     refreshForm();
@@ -645,7 +668,8 @@
     editingId = null;
     slugTouched = false;
     $("formTitle").textContent = "Add New Video";
-    ["fTitle", "fDuration", "fSlug", "fThumb", "fEmbed", "fSeo", "fMeta", "fKw", "fFocus"].forEach(function (id) { $(id).value = ""; });
+    ["fTitle", "fDuration", "fSlug", "fThumb", "fEmbed", "fSeo", "fMeta", "fKw", "fFocus", "fOgTitle", "fOgDesc", "fOgImg", "fCanon"].forEach(function (id) { $(id).value = ""; });
+    $("fTwCard").value = "summary_large_image";
     $("fDate").value = today();
     setCheckedTags([]);
     setStatusRadio("published");
@@ -666,6 +690,11 @@
     $("fMeta").value = v.meta_description || "";
     $("fKw").value = v.meta_keywords || "";
     $("fFocus").value = v.focus_keyword || "";
+    $("fOgTitle").value = v.og_title || "";
+    $("fOgDesc").value = v.og_description || "";
+    $("fOgImg").value = v.og_image || "";
+    $("fTwCard").value = v.twitter_card === "summary" ? "summary" : "summary_large_image";
+    $("fCanon").value = v.canonical || "";
     setCheckedTags(v.tags || (v.category ? [v.category] : []));
     setStatusRadio(statusOf(v));
     refreshForm();
@@ -772,7 +801,7 @@
     var d = {
       id: nextId(), slug: slugify(title), title: title, duration: "", thumbnail: "",
       embed_url: "", tags: ["Nature"], category: "Nature", date: today(),
-      status: "draft", seo_title: "", meta_description: "", meta_keywords: "", focus_keyword: "", local: true
+      status: "draft", seo_title: "", meta_description: "", meta_keywords: "", focus_keyword: "", og_title: "", og_description: "", og_image: "", twitter_card: "summary_large_image", canonical: "", local: true
     };
     localDrafts.push(d); saveLocalDrafts(); mergeLocalDrafts();
     $("qd").value = "";
