@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light" />
+    <meta name="description" content="VidTheme — browse videos by category. Latest videos, tag pages and a clean video player." />
+    <link rel="icon" href="data:," />
+    <title>VidTheme</title>
+    <style>
+      :root {
+        --page-bg: #e9e9e9;       /* light grey page background (sampled from reference) */
+        --header-bg: #212121;     /* header bar behind the logo (sampled from reference logo) */
+        --bar-bg: #000000;        /* heading bars + footer: pure black (sampled from reference footer) */
+        --bar-text: #ffffff;
+        --accent: #ec008c;        /* magenta / pink: Search + play buttons */
+        --accent-dark: #c40074;
+        --strip-bg: #82b5b3;      /* card title strip teal (sampled from reference card strip) */
+        --strip-text: #222426;    /* near-black text on the strip (sampled) */
+        --page-blue: #0b5ed7;     /* pagination blue: active page fill */
+        --card-bg: #ffffff;
+        --body-text: #1a1a1a;
+        --muted-text: #555555;
+        --content-w: 1240px;
+      }
+
+      html { box-sizing: border-box; }
+      *, *::before, *::after { box-sizing: inherit; }
+      body {
+        margin: 0;
+        background: var(--page-bg);
+        color: var(--body-text);
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 15px;
+        line-height: 1.45;
+      }
+      a { color: var(--page-blue); }
+      img { display: block; max-width: 100%; }
+
+      .wrap { max-width: var(--content-w); margin: 0 auto; padding: 0 10px; }
+
+      /* ---------- Header ---------- */
+      .site-header { background: var(--header-bg); }
+      .site-header .wrap {
+        display: flex; align-items: center; gap: 16px;
+        padding-top: 12px; padding-bottom: 12px; flex-wrap: wrap;
+      }
+      /* Logo: plain bold white text on the dark header, far left —
+         one colour only, no icon, no coloured part (reference style). */
+      .logo {
+        color: #fff; text-decoration: none; font-weight: bold;
+        font-size: 30px; letter-spacing: .5px; line-height: 1; white-space: nowrap;
+      }
+      .search-form {
+        margin-left: auto; display: flex; gap: 0; flex: 0 1 460px; min-width: 240px;
+      }
+      .search-form input {
+        flex: 1; min-width: 0; border: 0; padding: 10px 12px;
+        font-size: 15px; font-family: inherit; background: #fff; color: #111;
+        border-radius: 3px 0 0 3px;
+      }
+      .search-form input:focus { outline: 2px solid var(--accent); outline-offset: -2px; }
+      .search-form button {
+        border: 0; cursor: pointer; padding: 10px 22px;
+        background: var(--accent); color: #fff; font-weight: bold;
+        font-size: 15px; font-family: inherit; border-radius: 0 3px 3px 0;
+      }
+      .search-form button:hover { background: var(--accent-dark); }
+
+      /* ---------- Brand row ---------- */
+      .brand-row { padding: 10px 0 2px; }
+      .brand-row ul {
+        list-style: none; margin: 0; padding: 0;
+        display: flex; flex-wrap: wrap; justify-content: center; gap: 4px;
+      }
+      .brand-row a { display: block; line-height: 0; }
+      .brand-row a img { width: 95px; height: 42px; object-fit: cover; display: block; }
+      .brand-row a:hover img { opacity: .85; }
+
+      /* ---------- Ad slots (empty placeholders) ---------- */
+      .ad-slot {
+        margin: 14px auto; background: #f5f5f5; border: 1px dashed #b5b5b5;
+        color: #8a8a8a; display: flex; align-items: center; justify-content: center;
+        font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+      }
+      .ad-slot.wide { width: 300px; max-width: 92vw; height: 100px; }
+      .ad-slot.rect { width: 300px; max-width: 92vw; height: 250px; }
+
+      /* ---------- Heading bars ---------- */
+      .heading-bar { background: var(--bar-bg); margin: 12px 0 14px; }
+      .heading-bar h1, .heading-bar h2 {
+        margin: 0; color: var(--bar-text); font-size: 21px; font-weight: bold;
+        text-align: center; padding: 10px 12px; line-height: 1.3;
+      }
+      .heading-bar.left h1, .heading-bar.left h2 { text-align: left; }
+
+      /* ---------- Pagination ---------- */
+      .pagination {
+        display: flex; flex-wrap: wrap; justify-content: center; gap: 4px;
+        margin: 12px 0;
+      }
+      .pagination a, .pagination span {
+        display: inline-block; min-width: 30px; text-align: center;
+        padding: 4px 8px; background: #fff; color: var(--page-blue);
+        border: 1px solid var(--page-blue); text-decoration: none;
+        font-weight: normal; font-size: 13px; line-height: 1.4; border-radius: 2px;
+      }
+      .pagination a:hover { background: #dcebfd; }
+      .pagination .current { background: var(--page-blue); color: #fff; border-color: var(--page-blue); }
+      .pagination .dots { background: transparent; border-color: transparent; color: #333; min-width: 0; padding-left: 2px; padding-right: 2px; }
+      .pagination .disabled { background: #f0f0f0; color: #a8a8a8; border-color: #c8c8c8; }
+
+      /* ---------- Video grid / cards ---------- */
+      .grid {
+        display: grid; gap: 10px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+      @media (max-width: 1020px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+      @media (max-width: 640px)  { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+      .card {
+        display: block; min-width: 0; background: var(--card-bg); text-decoration: none;
+        border: 1px solid #d4d4d4;
+      }
+      .card .thumb { display: block; position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: #111; }
+      .card .thumb img { width: 100%; height: 100%; object-fit: cover; }
+      .card .duration {
+        position: absolute; right: 5px; bottom: 5px;
+        background: rgba(0, 0, 0, .75); color: #fff;
+        font-size: 12px; font-weight: bold; padding: 1px 6px; border-radius: 2px;
+      }
+      .card .play-hint {
+        position: absolute; inset: 0; display: none;
+        align-items: center; justify-content: center;
+        background: rgba(0, 0, 0, .28);
+      }
+      .card:hover .play-hint { display: flex; }
+      .card .play-hint i {
+        width: 44px; height: 44px; border-radius: 50%;
+        background: var(--accent); position: relative;
+      }
+      .card .play-hint i::after {
+        content: ""; position: absolute; top: 50%; left: 54%;
+        transform: translate(-50%, -50%);
+        border-style: solid; border-width: 8px 0 8px 13px;
+        border-color: transparent transparent transparent #fff;
+      }
+      .card .strip {
+        display: block;
+        background: var(--strip-bg); color: var(--strip-text);
+        font-weight: bold; font-size: 14px; padding: 7px 9px;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+
+      .empty-note {
+        background: #fff; border: 1px solid #d4d4d4; padding: 26px 16px;
+        text-align: center; color: var(--muted-text); font-size: 16px;
+      }
+
+      /* ---------- Video page ---------- */
+      /* Player markup is the classic embed structure:
+         .player > .embed-responsive.embed-responsive-16by9
+         ("Loading Video..." text + iframe.embed-responsive-item inside) */
+      .player { background: #000; }
+      .embed-responsive {
+        position: relative; display: flex; width: 100%;
+        align-items: center; justify-content: center;
+        overflow: hidden; background: #000; color: #fff;
+        font-size: 19px; font-weight: bold; letter-spacing: .5px;
+        text-align: center; padding: 0;
+      }
+      .embed-responsive-16by9 { aspect-ratio: 16 / 9; }
+      .embed-responsive .embed-responsive-item {
+        position: absolute; top: 0; left: 0;
+        width: 100%; height: 100%; border: 0; background: #000;
+      }
+      .video-tags { padding: 12px 2px 2px; font-size: 15px; line-height: 1.9; }
+      .video-tags .lbl { font-weight: bold; color: #333; margin-right: 6px; }
+      .video-tags a { margin-right: 14px; white-space: nowrap; }
+
+      .show-more-row { text-align: center; margin: 18px 0 6px; }
+      .show-more {
+        border: 0; cursor: pointer; font-family: inherit;
+        background: var(--accent); color: #fff; font-weight: bold;
+        font-size: 16px; padding: 11px 42px; border-radius: 3px;
+      }
+      .show-more:hover { background: var(--accent-dark); }
+
+      /* ---------- Info pages ---------- */
+      .info-box { background: #fff; border: 1px solid #d4d4d4; padding: 20px 22px; margin-bottom: 18px; }
+      .info-box p { margin: 0 0 12px; }
+      .info-box p:last-child { margin-bottom: 0; }
+
+      /* ---------- Footer ---------- */
+      .site-footer { background: var(--bar-bg); margin-top: 22px; }
+      .site-footer .wrap { padding-top: 18px; padding-bottom: 18px; text-align: center; color: #fff; font-size: 15px; }
+      .site-footer a { color: #fff; text-decoration: none; margin: 0 4px; }
+      .site-footer a:hover { text-decoration: underline; color: #fff; }
+      .site-footer .links { margin-top: 8px; }
+
+      @media (max-width: 640px) {
+        .logo { font-size: 25px; }
+        .search-form { flex: 1 1 100%; margin-left: 0; }
+        .heading-bar h1, .heading-bar h2 { font-size: 18px; }
+        /* Pagination stays on one line on phones: slightly smaller
+           boxes so numbers + « » fit without wrapping or overflow. */
+        .pagination { gap: 3px; }
+        .pagination a, .pagination span { min-width: 26px; padding: 3px 5px; font-size: 12px; }
+        .pagination .dots { padding-left: 0; padding-right: 0; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="wrap">
+        <a class="logo" href="/">VidTheme</a>
+        <form class="search-form" id="searchForm" role="search">
+          <input type="search" id="searchInput" placeholder="Search videos&hellip;" aria-label="Search videos" />
+          <button type="submit">Search</button>
+        </form>
+      </div>
+    </header>
+
+    <nav class="brand-row" aria-label="Categories">
+      <div class="wrap">
+        <ul id="brandRow"></ul>
+      </div>
+    </nav>
+
+    <main id="app"></main>
+
+    <footer class="site-footer">
+      <div class="wrap">
+        <div>&copy; 2026 VidTheme. All rights reserved.</div>
+        <div class="links">
+          <a href="/terms">Terms of Use</a> &middot;
+          <a href="/privacy">Privacy Policy</a> &middot;
+          <a href="/contact">Contact</a> &middot;
+          <a href="/dmca">DMCA</a>
+        </div>
+      </div>
+    </footer>
+
+    <script src="assets/app.js"></script>
+  </body>
+</html>
