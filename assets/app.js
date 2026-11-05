@@ -111,8 +111,25 @@
     if (SETTINGS.siteKeywords) HOME_KEYWORDS = SETTINGS.siteKeywords;
     if (SETTINGS.ogImage) HOME_OG_IMAGE = absUrl(SETTINGS.ogImage);
     if (SETTINGS.ogImageAlt) HOME_OG_IMAGE_ALT = SETTINGS.ogImageAlt;
+    applySiteIdentity();
     renderBrands();
     applyHeaderCode();
+  }
+  /* Favicon + header logo from Site Meta settings (empty = the
+     built-in defaults: /assets/favicon.svg and the "VidTheme"
+     text logo). Runs on every load, after settings arrive. */
+  function applySiteIdentity() {
+    var fav = (SETTINGS && SETTINGS.favicon) || "/assets/favicon.svg";
+    var links = document.querySelectorAll('link[rel="icon"], link[rel="apple-touch-icon"]');
+    for (var i = 0; i < links.length; i++) links[i].href = fav;
+    var logoLink = document.querySelector(".navbar .logo a");
+    if (logoLink) {
+      if (SETTINGS && SETTINGS.logoImage) {
+        logoLink.innerHTML = '<img src="' + esc(SETTINGS.logoImage) + '" alt="' + esc(SETTINGS.logoAlt || "VidTheme") + '" style="height:26px;width:auto;vertical-align:middle" />';
+      } else {
+        logoLink.textContent = "VidTheme";
+      }
+    }
   }
   /* Inject an HTML/JS snippet (header code, ad code) through real
      DOM nodes so <script> tags actually execute. Scripts set
