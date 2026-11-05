@@ -74,9 +74,14 @@
       tags: tags,
       tag: tags[0] || "",
       category: v.category || tags[0] || "",
-      date: v.date || ""
+      date: v.date || "",
+      status: v.status === "draft" ? "draft" : "published"
     };
   }
+
+  var ALL_VIDEOS = []; /* every video incl. drafts — only used to tell
+                          "draft" apart from "does not exist" */
+  function isPublished(v) { return v.status !== "draft"; }
 
   function loadVideos() {
     var bust = "?v=" + Date.now();
@@ -93,7 +98,10 @@
       })
       .then(function (data) {
         var list = Array.isArray(data) ? data : (data.videos || []);
-        VIDEOS = list.map(normalise).sort(function (a, b) { return a.id - b.id; });
+        ALL_VIDEOS = list.map(normalise).sort(function (a, b) { return a.id - b.id; });
+        /* Drafts never show publicly — only published videos (and
+           entries with no status field, which count as published). */
+        VIDEOS = ALL_VIDEOS.filter(isPublished);
       });
   }
 
@@ -318,10 +326,21 @@
     return sameTag.concat(others);
   }
 
+  function notFoundView() {
+    markActiveTag(null);
+    document.title = "Video not found — VidTheme";
+    app.innerHTML =
+      toptitle("Video Not Found", true) +
+      '<p class="empty-note">This video does not exist or is not published yet. <a href="/">Back to the homepage</a></p>';
+  }
+
   function videoView(id) {
     var video = null;
-    VIDEOS.forEach(function (v) { if (v.id === id) video = v; });
-    if (!video) { homeView(1); return; }
+    ALL_VIDEOS.forEach(function (v) { if (v.id === id) video = v; });
+    /* Unknown id OR a draft: the public site shows not-found.
+       (VIDEOS holds published videos only, so a draft id is
+       simply absent there — ALL_VIDEOS is checked instead.) */
+    if (!video || video.status === "draft") { notFoundView(); return; }
     markActiveTag(video.tag);
     document.title = video.title + " — VidTheme";
 
