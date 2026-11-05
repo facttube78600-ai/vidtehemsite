@@ -81,6 +81,12 @@ function validateVideo(v) {
   if (v.meta_description !== undefined && (typeof v.meta_description !== "string" || v.meta_description.length > 180 || /[<>]/.test(v.meta_description))) return "video.meta_description is invalid (max 180 chars, no < >)";
   if (v.meta_keywords !== undefined && (typeof v.meta_keywords !== "string" || v.meta_keywords.length > 500 || /[<>]/.test(v.meta_keywords))) return "video.meta_keywords is invalid (max 500 chars, no < >)";
   if (v.focus_keyword !== undefined && (typeof v.focus_keyword !== "string" || v.focus_keyword.length > 100 || /[<>]/.test(v.focus_keyword))) return "video.focus_keyword is invalid (max 100 chars, no < >)";
+  if (v.og_title !== undefined && (typeof v.og_title !== "string" || v.og_title.length > 200 || /[<>]/.test(v.og_title))) return "video.og_title is invalid (max 200 chars, no < >)";
+  if (v.og_description !== undefined && (typeof v.og_description !== "string" || v.og_description.length > 300 || /[<>]/.test(v.og_description))) return "video.og_description is invalid (max 300 chars, no < >)";
+  if (v.og_image !== undefined && (typeof v.og_image !== "string" || v.og_image.length > 500 || /[<>]/.test(v.og_image))) return "video.og_image is invalid (max 500 chars, no < >)";
+  if (v.twitter_card !== undefined && v.twitter_card !== "summary" && v.twitter_card !== "summary_large_image") return "video.twitter_card must be summary or summary_large_image";
+  if (v.canonical !== undefined && (typeof v.canonical !== "string" || v.canonical.length > 500 || /[<>]/.test(v.canonical))) return "video.canonical is invalid (max 500 chars, no < >)";
+  if (v.canonical && !/^https:\/\//.test(v.canonical)) return "video.canonical must be an https URL";
   return null;
 }
 
@@ -101,6 +107,11 @@ function normalise(v) {
     meta_description: (v.meta_description || "").trim(),
     meta_keywords: (v.meta_keywords || "").trim(),
     focus_keyword: (v.focus_keyword || "").trim(),
+    og_title: (v.og_title || "").trim(),
+    og_description: (v.og_description || "").trim(),
+    og_image: (v.og_image || "").trim(),
+    twitter_card: v.twitter_card === "summary" ? "summary" : "summary_large_image",
+    canonical: (v.canonical || "").trim(),
   };
 }
 
