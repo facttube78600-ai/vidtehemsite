@@ -346,7 +346,7 @@
       <!-- ================= Site Meta ================= -->
       <div id="v-sitemeta" class="view">
         <h1>Site Meta</h1>
-        <div class="note">This sets the meta tags for the <b>whole live site</b> (homepage title, description, keywords, social sharing). It is separate from the device-local Default Meta in the Meta Tags view. Saving here writes <b>site-settings.json</b> to GitHub — the public site picks it up on its next load.</div>
+        <div class="note">This sets the meta tags for the <b>whole live site</b> (homepage title, description, keywords, social sharing, favicon and header logo). It is separate from the device-local Default Meta in the Meta Tags view. Saving here writes <b>site-settings.json</b> to GitHub — the public site picks it up on its next load.</div>
         <div class="card">
           <label for="smTitle">Site Title</label>
           <input type="text" id="smTitle" maxlength="70" />
@@ -360,6 +360,16 @@
           <label for="smOgImageAlt">OG Image Alt Text — image SEO</label>
           <input type="text" id="smOgImageAlt" maxlength="200" placeholder="e.g. Free nature videos on VidTheme" />
           <img id="smOgPrev" alt="" style="max-width:300px;margin-top:10px;border-radius:8px;display:none" />
+          <label for="smFavicon">Favicon URL</label>
+          <div class="img-row"><input type="text" id="smFavicon" placeholder="Empty = default VidTheme icon" /><button class="btn" id="smFavUploadBtn" type="button">⬆ Upload</button><button class="img-clear" id="smFavClearBtn" type="button" title="Remove image">✕</button><input type="file" id="smFavFile" accept="image/*" style="display:none" /></div>
+          <p class="up-msg" id="smFavUpMsg"></p>
+          <img id="smFavPrev" alt="" style="width:32px;height:32px;object-fit:contain;margin-top:8px;display:none" />
+          <label for="smLogoImage">Logo Image URL</label>
+          <div class="img-row"><input type="text" id="smLogoImage" placeholder="Empty = text logo “VidTheme”" /><button class="btn" id="smLogoUploadBtn" type="button">⬆ Upload</button><button class="img-clear" id="smLogoClearBtn" type="button" title="Remove image">✕</button><input type="file" id="smLogoFile" accept="image/*" style="display:none" /></div>
+          <p class="up-msg" id="smLogoUpMsg"></p>
+          <img id="smLogoPrev" alt="" style="max-width:200px;max-height:40px;object-fit:contain;margin-top:8px;display:none;background:#212121;padding:4px;border-radius:4px" />
+          <label for="smLogoAlt">Logo Alt Text — image SEO</label>
+          <input type="text" id="smLogoAlt" maxlength="200" placeholder="e.g. VidTheme — free videos" />
           <label for="smTwCard">Twitter Card</label>
           <select id="smTwCard"><option value="summary_large_image">Large image</option><option value="summary">Summary (small image)</option></select>
           <div style="margin-top:16px"><button class="btn-green" id="smSaveBtn" type="button">💾 Save Site Meta</button></div>
@@ -534,6 +544,9 @@
       siteKeywords: "vidtheme, nature videos, travel videos, food videos, ocean life videos, mountain videos, city life videos, winter videos, sky videos, free videos",
       ogImage: "https://vidtehemsite.pages.dev/assets/og-image.svg",
       ogImageAlt: "",
+      favicon: "",
+      logoImage: "",
+      logoAlt: "",
       twitterCard: "summary_large_image",
       headerCode: "",
       ads: ads,
@@ -544,7 +557,7 @@
   function mergeSettings(data) {
     var d = defaultSettings();
     if (!data || typeof data !== "object") return d;
-    ["siteTitle", "siteDescription", "siteKeywords", "ogImage", "ogImageAlt", "twitterCard", "headerCode"].forEach(function (k) {
+    ["siteTitle", "siteDescription", "siteKeywords", "ogImage", "ogImageAlt", "favicon", "logoImage", "logoAlt", "twitterCard", "headerCode"].forEach(function (k) {
       if (typeof data[k] === "string") d[k] = data[k];
     });
     if (data.ads && typeof data.ads === "object") {
@@ -1177,6 +1190,13 @@
     $("smTwCard").value = settings.twitterCard === "summary" ? "summary" : "summary_large_image";
     var prev = $("smOgPrev");
     if (settings.ogImage) { prev.src = settings.ogImage; prev.style.display = ""; } else { prev.style.display = "none"; }
+    $("smFavicon").value = settings.favicon || "";
+    $("smLogoImage").value = settings.logoImage || "";
+    $("smLogoAlt").value = settings.logoAlt || "";
+    var favPrev = $("smFavPrev");
+    if (settings.favicon) { favPrev.src = settings.favicon; favPrev.style.display = ""; } else { favPrev.style.display = "none"; }
+    var logoPrev = $("smLogoPrev");
+    if (settings.logoImage) { logoPrev.src = settings.logoImage; logoPrev.style.display = ""; } else { logoPrev.style.display = "none"; }
   }
   $("smSaveBtn").addEventListener("click", function () {
     settings.siteTitle = $("smTitle").value.trim();
@@ -1184,11 +1204,22 @@
     settings.siteKeywords = $("smKeywords").value.trim();
     settings.ogImage = $("smOgImage").value.trim();
     settings.ogImageAlt = $("smOgImageAlt").value.trim();
+    settings.favicon = $("smFavicon").value.trim();
+    settings.logoImage = $("smLogoImage").value.trim();
+    settings.logoAlt = $("smLogoAlt").value.trim();
     settings.twitterCard = $("smTwCard").value;
     saveSettings($("smMsg")).then(function (ok) { if (ok) settingsDirty.sitemeta = false; });
   });
   $("smOgImage").addEventListener("input", function () {
     var prev = $("smOgPrev");
+    if (this.value) { prev.src = this.value; prev.style.display = ""; } else { prev.style.display = "none"; }
+  });
+  $("smFavicon").addEventListener("input", function () {
+    var prev = $("smFavPrev");
+    if (this.value) { prev.src = this.value; prev.style.display = ""; } else { prev.style.display = "none"; }
+  });
+  $("smLogoImage").addEventListener("input", function () {
+    var prev = $("smLogoPrev");
     if (this.value) { prev.src = this.value; prev.style.display = ""; } else { prev.style.display = "none"; }
   });
 
@@ -1353,6 +1384,10 @@
   bindImageClear("thumbClearBtn", "thumbFile", "fThumb", "fThumbAlt", "thumbUpMsg", function () { updatePreview(); updateSeo(); });
   bindImageClear("ogClearBtn", "ogFile", "fOgImg", "fOgImgAlt", "ogUpMsg");
   bindImageClear("smOgClearBtn", "smOgFile", "smOgImage", "smOgImageAlt", "smOgUpMsg");
+  bindImageUpload("smFavUploadBtn", "smFavFile", "smFavicon", null, "smFavUpMsg");
+  bindImageClear("smFavClearBtn", "smFavFile", "smFavicon", null, "smFavUpMsg", function () { var p = $("smFavPrev"); if (p) p.style.display = "none"; });
+  bindImageUpload("smLogoUploadBtn", "smLogoFile", "smLogoImage", "smLogoAlt", "smLogoUpMsg");
+  bindImageClear("smLogoClearBtn", "smLogoFile", "smLogoImage", "smLogoAlt", "smLogoUpMsg", function () { var p = $("smLogoPrev"); if (p) p.style.display = "none"; });
 
   function renderAds() {
     $("adsList").innerHTML = ADS_PLACEMENTS.map(function (p) {
