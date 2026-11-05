@@ -1,6 +1,7 @@
 /* VidTheme — Publish API (Cloudflare Pages Function).
  *
  * POST /api/publish  { password, video, _delete? }
+ * POST /api/publish  { password, settings }
  *
  * The admin password and the GitHub token are NOT in this file.
  * They come from Cloudflare Pages environment variables:
@@ -11,12 +12,28 @@
  *                    this site lives in.
  *   GITHUB_BRANCH  — optional, defaults to "main".
  *
- * Flow: check password -> fetch current videos.json from GitHub
- * -> upsert (or delete) the video -> commit the updated file
- * back via the GitHub Contents API -> the public site fetches the
- * new videos.json on its next load, with no redeploy. */
+ * Flow: check password -> fetch the current file from GitHub
+ * -> upsert (or delete) the video, or replace the site settings
+ * -> commit the updated file back via the GitHub Contents API
+ * -> the public site fetches the new file on its next load,
+ * with no redeploy.
+ *
+ * Video model: { id, slug, title, duration, thumbnail, embed_url,
+ *   tags: [free-form strings], category: one of TAGS (drives the
+ *   video URL /<category-slug>/<slug>-<id>.html), date, status,
+ *   seo_title, meta_description, meta_keywords, focus_keyword,
+ *   og_title, og_description, og_image, twitter_card, canonical }.
+ *
+ * Settings model (site-settings.json): { siteTitle,
+ *   siteDescription, siteKeywords, ogImage, twitterCard,
+ *   headerCode, ads: { <placement>: { enabled, code } },
+ *   brands: [{ label, color, image, link, enabled }] }.
+ * headerCode and ad code may contain HTML/JS (Analytics, AdSense)
+ * — they come from the password-checked admin only, so they are
+ * stored as-is; every other text field rejects < and >. */
 
 const TAGS = ["Nature", "Travel", "Food", "Ocean Life", "Mountains", "City Life", "Winter", "Sky"];
+const AD_PLACEMENTS = ["homeTop", "homeBottomRect", "homeBottomWide", "videoTop", "videoMidRect1", "videoMidWide", "videoMidRect2", "videoBottomRect", "videoBottomWide"];
 const REPO_DEFAULT = "facttube78600-ai/vidtehemsite";
 const BRANCH_DEFAULT = "main";
 
@@ -59,6 +76,10 @@ function slugify(text) {
     .replace(/^-+|-+$/g, "");
 }
 
+function noAngle(s) {
+  return typeof s === "string" && !/[<>]/.test(s);
+}
+
 function validateVideo(v) {
   if (!v || typeof v !== "object") return "video is required";
   if (typeof v.id !== "number" || !Number.isInteger(v.id) || v.id < 1) return "video.id must be a positive integer";
@@ -72,9 +93,13 @@ function validateVideo(v) {
   if (v.duration && !/^\d{1,3}:\d{2}$/.test(v.duration)) return "video.duration must look like mm:ss";
   if (v.thumbnail && typeof v.thumbnail !== "string") return "video.thumbnail is invalid";
   if (v.thumbnail && v.thumbnail.length > 500) return "video.thumbnail is too long";
-  const tags = Array.isArray(v.tags) ? v.tags : (v.category ? [v.category] : []);
-  if (!tags.length) return "at least one category is required";
-  for (const t of tags) if (!TAGS.includes(t)) return "unknown category: " + t;
+  if (!v.category || !TAGS.includes(v.category)) return "video.category must be one of: " + TAGS.join(", ");
+  if (v.tags !== undefined) {
+    if (!Array.isArray(v.tags)) return "video.tags must be an array";
+    for (const t of v.tags) {
+      if (typeof t !== "string" || !t.trim() || t.length > 60 || /[<>]/.test(t)) return "video.tags entries must be short text (max 60 chars, no < >)";
+    }
+  }
   if (v.date && !/^\d{4}-\d{2}-\d{2}$/.test(v.date)) return "video.date must be YYYY-MM-DD";
   if (v.status !== undefined && v.status !== "published" && v.status !== "draft") return "video.status must be published or draft";
   if (v.seo_title !== undefined && (typeof v.seo_title !== "string" || v.seo_title.length > 70 || /[<>]/.test(v.seo_title))) return "video.seo_title is invalid (max 70 chars, no < >)";
@@ -91,7 +116,7 @@ function validateVideo(v) {
 }
 
 function normalise(v) {
-  const tags = Array.isArray(v.tags) ? v.tags : (v.category ? [v.category] : []);
+  const tags = Array.isArray(v.tags) ? v.tags.map((t) => String(t).trim()).filter(Boolean) : [];
   return {
     id: v.id,
     slug: v.slug || slugify(v.title),
@@ -100,7 +125,7 @@ function normalise(v) {
     thumbnail: v.thumbnail || "",
     embed_url: v.embed_url,
     tags,
-    category: v.category || tags[0] || "",
+    category: v.category,
     date: v.date || new Date().toISOString().slice(0, 10),
     status: v.status === "draft" ? "draft" : "published",
     seo_title: (v.seo_title || "").trim(),
@@ -113,6 +138,62 @@ function normalise(v) {
     twitter_card: v.twitter_card === "summary" ? "summary" : "summary_large_image",
     canonical: (v.canonical || "").trim(),
   };
+}
+
+function validateSettings(s) {
+  if (!s || typeof s !== "object") return "settings is required";
+  if (s.siteTitle !== undefined && (typeof s.siteTitle !== "string" || s.siteTitle.length > 100 || !noAngle(s.siteTitle))) return "settings.siteTitle is invalid (max 100 chars, no < >)";
+  if (s.siteDescription !== undefined && (typeof s.siteDescription !== "string" || s.siteDescription.length > 200 || !noAngle(s.siteDescription))) return "settings.siteDescription is invalid (max 200 chars, no < >)";
+  if (s.siteKeywords !== undefined && (typeof s.siteKeywords !== "string" || s.siteKeywords.length > 500 || !noAngle(s.siteKeywords))) return "settings.siteKeywords is invalid (max 500 chars, no < >)";
+  if (s.ogImage !== undefined && (typeof s.ogImage !== "string" || s.ogImage.length > 500 || !noAngle(s.ogImage))) return "settings.ogImage is invalid (max 500 chars, no < >)";
+  if (s.twitterCard !== undefined && s.twitterCard !== "summary" && s.twitterCard !== "summary_large_image") return "settings.twitterCard must be summary or summary_large_image";
+  if (s.headerCode !== undefined && (typeof s.headerCode !== "string" || s.headerCode.length > 20000)) return "settings.headerCode is too long (max 20000 chars)";
+  if (s.ads !== undefined) {
+    if (typeof s.ads !== "object" || Array.isArray(s.ads)) return "settings.ads must be an object";
+    for (const key of Object.keys(s.ads)) {
+      if (!AD_PLACEMENTS.includes(key)) return "unknown ad placement: " + key;
+      const a = s.ads[key];
+      if (!a || typeof a !== "object" || typeof a.enabled !== "boolean" || typeof a.code !== "string" || a.code.length > 10000) return "settings.ads." + key + " must be {enabled, code} (code max 10000 chars)";
+    }
+  }
+  if (s.brands !== undefined) {
+    if (!Array.isArray(s.brands) || s.brands.length > 12) return "settings.brands must be an array (max 12)";
+    for (const b of s.brands) {
+      if (!b || typeof b !== "object") return "settings.brands entries must be objects";
+      if (typeof b.label !== "string" || !b.label.trim() || b.label.length > 40 || !noAngle(b.label)) return "brand label is invalid (max 40 chars, no < >)";
+      if (typeof b.color !== "string" || !/^#[0-9a-fA-F]{6}$/.test(b.color)) return "brand color must be a #rrggbb hex value";
+      if (b.image !== undefined && (typeof b.image !== "string" || b.image.length > 500 || !noAngle(b.image))) return "brand image is invalid (max 500 chars, no < >)";
+      if (typeof b.link !== "string" || !b.link.trim() || b.link.length > 500 || !noAngle(b.link)) return "brand link is invalid (max 500 chars, no < >)";
+      if (typeof b.enabled !== "boolean") return "brand enabled must be true or false";
+    }
+  }
+  return null;
+}
+
+function normaliseSettings(s) {
+  const out = {};
+  if (s.siteTitle !== undefined) out.siteTitle = s.siteTitle.trim();
+  if (s.siteDescription !== undefined) out.siteDescription = s.siteDescription.trim();
+  if (s.siteKeywords !== undefined) out.siteKeywords = s.siteKeywords.trim();
+  if (s.ogImage !== undefined) out.ogImage = s.ogImage.trim();
+  if (s.twitterCard !== undefined) out.twitterCard = s.twitterCard;
+  if (s.headerCode !== undefined) out.headerCode = s.headerCode;
+  if (s.ads !== undefined) {
+    out.ads = {};
+    for (const key of AD_PLACEMENTS) {
+      if (s.ads[key] !== undefined) out.ads[key] = { enabled: !!s.ads[key].enabled, code: s.ads[key].code || "" };
+    }
+  }
+  if (s.brands !== undefined) {
+    out.brands = s.brands.map((b) => ({
+      label: b.label.trim(),
+      color: b.color,
+      image: (b.image || "").trim(),
+      link: b.link.trim(),
+      enabled: !!b.enabled,
+    }));
+  }
+  return out;
 }
 
 export async function onRequestPost(context) {
@@ -136,6 +217,52 @@ export async function onRequestPost(context) {
   const [owner, repoName] = repo.split("/");
   if (!owner || !repoName) return json(500, { error: "GITHUB_REPO must be owner/repo" });
 
+  const headers = {
+    Authorization: "Bearer " + env.GITHUB_TOKEN,
+    Accept: "application/vnd.github+json",
+    "User-Agent": "VidTheme-Publish",
+  };
+
+  async function readFile(path) {
+    const apiBase = "https://api.github.com/repos/" + owner + "/" + repoName + "/contents/" + path;
+    const res = await fetch(apiBase + "?ref=" + encodeURIComponent(branch), { headers });
+    if (res.status === 404) return { sha: null, data: null };
+    if (res.status !== 200) throw new Error("Could not read " + path + " from GitHub (HTTP " + res.status + ")");
+    const data = await res.json();
+    let parsed = null;
+    try { parsed = JSON.parse(b64decode(data.content)); } catch { throw new Error("Current " + path + " on GitHub is not valid JSON"); }
+    return { sha: data.sha, data: parsed };
+  }
+
+  async function writeFile(path, sha, obj, message) {
+    const apiBase = "https://api.github.com/repos/" + owner + "/" + repoName + "/contents/" + path;
+    const put = await fetch(apiBase, {
+      method: "PUT",
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: JSON.stringify({ message, content: b64encode(JSON.stringify(obj, null, 2) + "\n"), branch, ...(sha ? { sha } : {}) }),
+    });
+    if (!put.ok) {
+      const detail = await put.text();
+      throw new Error("GitHub commit failed (HTTP " + put.status + "): " + detail.slice(0, 300));
+    }
+  }
+
+  // ---- Site settings save: { password, settings } ----
+  if (body.settings !== undefined) {
+    const err = validateSettings(body.settings);
+    if (err) return json(400, { error: err });
+    try {
+      const current = await readFile("site-settings.json");
+      const base = current.data && typeof current.data === "object" ? current.data : {};
+      const merged = { ...base, ...normaliseSettings(body.settings) };
+      await writeFile("site-settings.json", current.sha, merged, "Update site settings via admin");
+      return json(200, { ok: true, message: "Site settings saved. The live site picks them up on its next load." });
+    } catch (e) {
+      return json(502, { error: e.message });
+    }
+  }
+
+  // ---- Video publish / delete: { password, video, _delete? } ----
   const isDelete = body._delete === true;
   const video = body.video;
   if (!video || typeof video.id !== "number") return json(400, { error: "video.id is required" });
@@ -147,69 +274,29 @@ export async function onRequestPost(context) {
     cleaned = normalise(video);
   }
 
-  const apiBase = "https://api.github.com/repos/" + owner + "/" + repoName + "/contents/videos.json";
-  const headers = {
-    Authorization: "Bearer " + env.GITHUB_TOKEN,
-    Accept: "application/vnd.github+json",
-    "User-Agent": "VidTheme-Publish",
-  };
-
-  // Fetch the current videos.json (404 = start from an empty list).
-  let sha = null;
-  let videos = [];
-  const current = await fetch(apiBase + "?ref=" + encodeURIComponent(branch), { headers });
-  if (current.status === 200) {
-    const data = await current.json();
-    sha = data.sha;
-    try {
-      const parsed = JSON.parse(b64decode(data.content));
-      videos = Array.isArray(parsed) ? parsed : (parsed.videos || []);
-    } catch {
-      return json(500, { error: "Current videos.json on GitHub is not valid JSON" });
+  try {
+    const current = await readFile("videos.json");
+    let videos = [];
+    if (current.data !== null) videos = Array.isArray(current.data) ? current.data : (current.data.videos || []);
+    if (isDelete) {
+      const before = videos.length;
+      videos = videos.filter((v) => v.id !== video.id);
+      if (videos.length === before) return json(404, { error: "Video #" + video.id + " not found" });
+      await writeFile("videos.json", current.sha, videos, "Delete video #" + video.id + " via admin");
+      return json(200, { ok: true, message: "Video #" + video.id + " deleted. " + videos.length + " videos remain.", total: videos.length });
     }
-  } else if (current.status !== 404) {
-    return json(502, { error: "Could not read videos.json from GitHub (HTTP " + current.status + ")" });
-  }
-
-  if (isDelete) {
-    const before = videos.length;
-    videos = videos.filter((v) => v.id !== video.id);
-    if (videos.length === before) return json(404, { error: "Video #" + video.id + " not found" });
-  } else {
     const idx = videos.findIndex((v) => v.id === cleaned.id);
     if (idx >= 0) videos[idx] = cleaned;
     else videos.push(cleaned);
     videos.sort((a, b) => a.id - b.id);
+    await writeFile("videos.json", current.sha, videos, "Publish video #" + cleaned.id + " via admin: " + cleaned.title);
+    return json(200, { ok: true, message: "Video #" + cleaned.id + " published. " + videos.length + " videos in total.", total: videos.length });
+  } catch (e) {
+    return json(502, { error: e.message });
   }
-
-  const content = b64encode(JSON.stringify(videos, null, 2) + "\n");
-  const put = await fetch(apiBase, {
-    method: "PUT",
-    headers: { ...headers, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      message: isDelete
-        ? "Delete video #" + video.id + " via admin"
-        : "Publish video #" + cleaned.id + " via admin: " + cleaned.title,
-      content,
-      branch,
-      ...(sha ? { sha } : {}),
-    }),
-  });
-  if (!put.ok) {
-    const detail = await put.text();
-    return json(502, { error: "GitHub commit failed (HTTP " + put.status + ")", detail: detail.slice(0, 300) });
-  }
-
-  return json(200, {
-    ok: true,
-    message: isDelete
-      ? "Video #" + video.id + " deleted. " + videos.length + " videos remain."
-      : "Video #" + cleaned.id + " published. " + videos.length + " videos in total.",
-    total: videos.length,
-  });
 }
 
 export async function onRequest(context) {
   if (context.request.method === "POST") return onRequestPost(context);
-  return json(405, { error: "Use POST with {password, video}." });
+  return json(405, { error: "Use POST with {password, video} or {password, settings}." });
 }
