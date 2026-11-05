@@ -243,7 +243,7 @@
       slug: v.slug || slugify(v.title || ("video-" + v.id)),
       title: v.title || "Untitled video",
       duration: v.duration || "",
-      thumb: v.thumbnail || v.thumb || "",
+      thumb: v.thumbnail || v.thumb || "assets/thumbs/placeholder.svg",
       embed_url: v.embed_url || "",
       tags: tags,
       tag: v.category || tags[0] || "",
@@ -783,9 +783,9 @@
      the path is just a new slug-only URL that happens to end in
      digits. On a match, normalise the address bar to the clean
      slug-only URL and render it. */
-  function openLegacyVideo(id, slug) {
+  function openLegacyVideo(id, slug, cat) {
     var video = findVideoById(id);
-    if (!video || video.status === "draft" || video.slug !== slug) { notFoundView(); return; }
+    if (!video || video.status === "draft" || video.slug !== slug || (cat && categorySlug(video) !== cat)) { notFoundView(); return; }
     window.history.replaceState(null, "", videoUrl(video));
     videoView(video.slug);
   }
@@ -795,15 +795,19 @@
     var qs = parseQuery(window.location.search || "");
     var m;
 
-    if ((m = path.match(/^\/([a-z0-9-]+)\/([a-z0-9-]+)\.html$/)) && findTag(m[1]) && findVideoBySlug(m[2])) {
-      videoView(m[2]);
+    if ((m = path.match(/^\/([a-z0-9-]+)\/([a-z0-9-]+)\.html$/)) && findTag(m[1])) {
+      /* A video opens ONLY under its own main category. The same
+         slug under any other category is not its URL. */
+      var v0 = findVideoBySlug(m[2]);
+      if (v0 && categorySlug(v0) === m[1]) videoView(m[2]);
+      else notFoundView();
     } else if ((m = path.match(/^\/video\/(.+)-(\d+)\.html$/))) {
       /* Legacy video URL — the server 301s these to the clean
          URL; this branch only runs if a legacy URL is reached
          without the server (e.g. in-page navigation). */
       openLegacyVideo(parseInt(m[2], 10), m[1]);
     } else if ((m = path.match(/^\/([a-z0-9-]+)\/(.+)-(\d+)\.html$/)) && findTag(m[1])) {
-      openLegacyVideo(parseInt(m[3], 10), m[2]);
+      openLegacyVideo(parseInt(m[3], 10), m[2], m[1]);
     } else if ((m = path.match(/^\/tags\/([a-z0-9-]+)\.html$/))) {
       var tag = findTag(m[1]);
       if (tag) tagView(tag, parseInt(qs.p || "1", 10)); else homeView(1);
