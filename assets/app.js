@@ -322,13 +322,6 @@
   }
   renderBrands();
 
-  function markActiveTag(tag) {
-    var links = brandRow.querySelectorAll("a");
-    for (var i = 0; i < links.length; i++) {
-      links[i].classList.toggle("active", links[i].getAttribute("data-tag") === tag);
-    }
-  }
-
   /* ---------- Ad slots (dashboard-managed) ----------
      Each placement is ON/OFF with pasted code in the admin (Site >
      Ads). OFF hides the slot entirely. ON with code renders the
@@ -510,7 +503,6 @@
 
   /* ---------- Views ---------- */
   function homeView(page) {
-    markActiveTag(null);
     var list = VIDEOS.slice().reverse(); /* newest first */
     page = clampPage(page, list);
     setMeta({
@@ -528,7 +520,6 @@
   }
 
   function tagView(tag, page) {
-    markActiveTag(tag);
     var list = VIDEOS.filter(function (v) { return v.tag === tag || v.tags.indexOf(tag) !== -1; }).reverse();
     page = clampPage(page, list);
     setMeta({
@@ -547,7 +538,6 @@
   }
 
   function searchView(query, page) {
-    markActiveTag(null);
     var q = query.toLowerCase();
     var list = VIDEOS.filter(function (v) {
       return v.title.toLowerCase().indexOf(q) !== -1 || v.tag.toLowerCase().indexOf(q) !== -1;
@@ -578,7 +568,6 @@
   }
 
   function notFoundView() {
-    markActiveTag(null);
     setMeta({
       title: "Page Not Found | VidTheme",
       description: "This page does not exist on VidTheme.",
@@ -599,7 +588,6 @@
        (VIDEOS holds published videos only, so a draft id is
        simply absent there — ALL_VIDEOS is checked instead.) */
     if (!video || video.status === "draft") { notFoundView(); return; }
-    markActiveTag(video.tag);
     var vTitle = video.seo_title || video.title;
     var vDesc = video.meta_description || ("Watch " + video.title + " on VidTheme — free " + (video.category || video.tag || "video").toLowerCase() + " video.");
     var vKw = video.meta_keywords || video.tags.join(", ");
@@ -708,7 +696,6 @@
   };
 
   function infoView(key) {
-    markActiveTag(null);
     var page = INFO[key];
     setMeta({
       title: page.title + " | VidTheme",
