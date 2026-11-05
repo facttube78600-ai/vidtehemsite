@@ -3103,7 +3103,7 @@
     "tags": [
       "Winter"
     ],
-    "category": "Nature",
+    "category": "Travel",
     "date": "2026-11-04",
     "status": "published",
     "seo_title": "",
@@ -3113,6 +3113,8 @@
     "og_title": "",
     "og_description": "",
     "og_image": "",
+    "thumb_alt": "",
+    "og_image_alt": "",
     "twitter_card": "summary_large_image",
     "canonical": ""
   },
