@@ -80,6 +80,52 @@ function noAngle(s) {
   return typeof s === "string" && !/[<>]/.test(s);
 }
 
+/* ---------- Auto-generated SVG thumbnail ----------
+   When a video is published with no thumbnail, the server draws
+   one in the same style as the placeholder thumbs in
+   assets/thumbs/ (category-colour gradient + title + VidTheme),
+   stores it under assets/uploads/<slug>-thumb.svg and uses it as
+   the video's thumbnail. */
+const CATEGORY_COLORS = {
+  "Nature": ["#24975c", "#4db87e"],
+  "Travel": ["#3277d6", "#6aa5e8"],
+  "Food": ["#d36e2e", "#e89a5f"],
+  "Ocean Life": ["#1f9aa6", "#4fc3cf"],
+  "Mountains": ["#6c5ca1", "#9a8cc4"],
+  "City Life": ["#3c4451", "#6b7686"],
+  "Winter": ["#5e93b5", "#8fb8d2"],
+  "Sky": ["#a13c8e", "#c46eb5"],
+};
+function escapeXml(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+}
+function wrapTitleLines(title, maxPerLine, maxLines) {
+  const words = String(title || "Video").split(/\s+/).filter(Boolean);
+  const lines = [];
+  let cur = "";
+  for (const w of words) {
+    const next = cur ? cur + " " + w : w;
+    if (next.length > maxPerLine && cur) { lines.push(cur); cur = w; }
+    else cur = next;
+    if (lines.length === maxLines) break;
+  }
+  if (lines.length < maxLines && cur) lines.push(cur);
+  if (lines.length === maxLines && words.join(" ").length > lines.join(" ").length) {
+    lines[maxLines - 1] = lines[maxLines - 1].replace(/…?$/, "…");
+  }
+  return lines.slice(0, maxLines);
+}
+function buildThumbSvg(title, category) {
+  const cols = CATEGORY_COLORS[category] || ["#3c4451", "#6b7686"];
+  const lines = wrapTitleLines(title, 26, 3);
+  const size = lines.length === 1 ? 42 : lines.length === 2 ? 36 : 32;
+  const startY = 185 - (lines.length - 1) * 26;
+  const text = lines.map((l, i) =>
+    '<text x="320" y="' + (startY + i * 52) + '" font-family="Arial,Helvetica,sans-serif" font-size="' + size + '" font-weight="bold" fill="#ffffff" text-anchor="middle">' + escapeXml(l) + "</text>"
+  ).join("");
+  return '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + cols[0] + '"/><stop offset="1" stop-color="' + cols[1] + '"/></linearGradient></defs><rect width="640" height="360" fill="url(#g)"/>' + text + '<text x="320" y="320" font-family="Arial,Helvetica,sans-serif" font-size="20" fill="#ffffff" opacity="0.85" text-anchor="middle">VidTheme</text></svg>';
+}
+
 /* ---- Image upload (admin) ---- */
 const IMAGE_EXTS = [".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg"];
 const IMAGE_MAX_BYTES = 5 * 1024 * 1024; /* 5 MB */
@@ -366,12 +412,30 @@ export async function onRequestPost(context) {
     }
     const clash = videos.find((x) => x.slug === cleaned.slug && x.id !== cleaned.id);
     if (clash) return json(400, { error: "slug '" + cleaned.slug + "' is already used by video #" + clash.id + " — pick a different slug" });
+    // No thumbnail on a published video: auto-generate an SVG one
+    // (category gradient + title) so the card never renders empty.
+    let generatedThumbnail = null;
+    let thumbnailWarning = null;
+    if (cleaned.status !== "draft" && !cleaned.thumbnail) {
+      const thumbPath = "assets/uploads/" + cleaned.slug + "-thumb.svg";
+      try {
+        const sha = await getSha(thumbPath);
+        await writeBinary(thumbPath, sha, b64encode(buildThumbSvg(cleaned.title, cleaned.category)), "Auto-generate thumbnail for video #" + cleaned.id + " via admin");
+        cleaned.thumbnail = "/" + thumbPath;
+        generatedThumbnail = cleaned.thumbnail;
+      } catch (e) {
+        thumbnailWarning = "Thumbnail could not be auto-generated: " + e.message;
+      }
+    }
     const idx = videos.findIndex((v) => v.id === cleaned.id);
     if (idx >= 0) videos[idx] = cleaned;
     else videos.push(cleaned);
     videos.sort((a, b) => a.id - b.id);
     await writeFile("videos.json", current.sha, videos, "Publish video #" + cleaned.id + " via admin: " + cleaned.title);
-    return json(200, { ok: true, message: "Video #" + cleaned.id + " published. " + videos.length + " videos in total.", total: videos.length });
+    let msg = "Video #" + cleaned.id + " published. " + videos.length + " videos in total.";
+    if (generatedThumbnail) msg += " Thumbnail auto-generated: " + generatedThumbnail;
+    if (thumbnailWarning) msg += " " + thumbnailWarning;
+    return json(200, { ok: true, message: msg, total: videos.length, ...(generatedThumbnail ? { generatedThumbnail } : {}), ...(thumbnailWarning ? { thumbnailWarning } : {}) });
   } catch (e) {
     return json(502, { error: e.message });
   }
