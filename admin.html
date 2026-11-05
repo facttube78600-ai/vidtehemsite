@@ -302,7 +302,7 @@
               <label for="fFocus">Focus Keyword</label>
               <input type="text" id="fFocus" placeholder="e.g. hidden waterfalls rainforest" />
               <label for="fCanon">Canonical URL</label>
-              <input type="text" id="fCanon" placeholder="Auto: https://vidtehemsite.pages.dev/nature/slug-id.html" />
+              <input type="text" id="fCanon" placeholder="Auto: https://vidtehemsite.pages.dev/nature/slug.html" />
               <h3>Social Preview</h3>
               <div class="serp" id="socialPrev"><div class="t" id="socTitle"></div><div class="u" id="socUrl"></div><div class="d" id="socDesc"></div></div>
               <h3>Google Preview</h3>
@@ -664,7 +664,11 @@
         // The editor keeps its own unique link (#edit-<id> / #new-<uid>);
         // the generic "#"+view hash must not wipe it while editing.
         if (real === "editor" && editorKey) window.history.replaceState(null, "", "#" + editorKey);
-        else window.history.replaceState(null, "", "#" + view);
+        else {
+          window.history.replaceState(null, "", "#" + view);
+          // Left the editor: forget the open-editor safety net.
+          try { window.sessionStorage.removeItem("vt_open_editor"); } catch (e) { /* ignore */ }
+        }
       }
     } catch (e) { /* ignore */ }
     window.scrollTo(0, 0);
@@ -702,7 +706,7 @@
   function rowHtml(v) {
     return "<tr>" +
       '<td><img class="thumb-mini" src="' + esc(v.thumbnail || v.thumb || "") + '" alt="" /></td>' +
-      "<td>" + esc(v.title) + "<br><span class='muted'>/" + esc(categorySlug(v.category)) + "/" + esc(v.slug) + "-" + v.id + ".html</span></td>" +
+      "<td>" + esc(v.title) + "<br><span class='muted'>/" + esc(categorySlug(v.category)) + "/" + esc(v.slug) + ".html</span></td>" +
       "<td>" + esc(v.category || (v.tags || []).join(", ")) + "</td>" +
       "<td>" + esc(v.duration || "") + "</td>" +
       "<td>" + esc(v.date || "") + "</td>" +
@@ -840,7 +844,7 @@
     }).join("");
     $("cSeo").textContent = v.seo_title.length + " / 60";
     $("cMeta").textContent = v.meta_description.length + " / 160";
-    var url = SITE_URL + categorySlug(v.category) + "/" + (v.slug || slugify(v.title || "video")) + "-" + v.id + ".html";
+    var url = SITE_URL + categorySlug(v.category) + "/" + (v.slug || slugify(v.title || "video")) + ".html";
     $("urlPreview").textContent = "URL: " + url;
     $("serpTitle").textContent = d.seoTitle || "Video title";
     $("serpUrl").textContent = url;
@@ -964,9 +968,16 @@
     refreshForm();
   }
 
+  /* Remember which editor this tab has open, so a refresh can
+     reopen it even if the address-bar link was lost. sessionStorage
+     survives a refresh but not a new tab — a fresh visit starts clean. */
+  function rememberOpenEditor() {
+    try { if (editorKey) window.sessionStorage.setItem("vt_open_editor", editorKey); } catch (e) { /* ignore */ }
+  }
   function loadIntoForm(v, scrollToSeo) {
     editingId = v.id;
     editorKey = "edit-" + v.id;
+    rememberOpenEditor();
     lastAutosaveJson = "";
     $("formTitle").textContent = "Edit video #" + v.id;
     $("fTitle").value = v.title || "";
@@ -1000,6 +1011,7 @@
   function newVideo(uid) {
     clearForm();
     editorKey = "new-" + (uid || ("n" + Date.now().toString(36)));
+    rememberOpenEditor();
     lastAutosaveJson = "";
     if (!restoreAutosave()) $("autosaveMsg").textContent = "";
     show("editor");
@@ -1445,15 +1457,28 @@
     loadSettings();
     loadVideos().then(function () {
       var hash = (window.location.hash || "").replace("#", "");
+      var opened = false;
       if (hash.indexOf("edit-") === 0) {
         var v = findVideo(parseInt(hash.slice(5), 10));
-        if (v) loadIntoForm(v); else show("videos");
+        if (v) { loadIntoForm(v); opened = true; } else show("videos");
       } else if (hash.indexOf("new-") === 0) {
-        newVideo(hash.slice(4));
+        newVideo(hash.slice(4)); opened = true;
       } else if (hash === "editor") {
-        newVideo();
+        newVideo(); opened = true;
       } else if (TITLES[hash] || hash === "videos" || hash === "published" || hash === "drafts") {
-        show(hash);
+        show(hash); opened = true;
+      }
+      if (!opened) {
+        // Refresh safety net: if the address-bar link was lost,
+        // reopen the editor this tab had open.
+        var saved = null;
+        try { saved = window.sessionStorage.getItem("vt_open_editor"); } catch (e) { /* ignore */ }
+        if (saved && saved.indexOf("edit-") === 0) {
+          var sv = findVideo(parseInt(saved.slice(5), 10));
+          if (sv) loadIntoForm(sv);
+        } else if (saved && saved.indexOf("new-") === 0) {
+          newVideo(saved.slice(4));
+        }
       }
     }).catch(function () { showMsg($("msg"), "Could not load videos.json.", false); });
   }
