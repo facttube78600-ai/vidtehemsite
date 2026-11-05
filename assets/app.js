@@ -187,7 +187,12 @@
         return r.json();
       })
       .catch(function () {
-        return fetch("videos.json" + bust, { cache: "no-store" }).then(function (r) {
+        /* Fallback is the copy deployed with the site. It must be an
+           ABSOLUTE path: on a video/tag/page URL a relative
+           "videos.json" would resolve to /video/videos.json (404),
+           so a refresh on any deep link could never recover when the
+           GitHub fetch failed — the page stayed empty. */
+        return fetch("/videos.json" + bust, { cache: "no-store" }).then(function (r) {
           if (!r.ok) throw new Error("local videos.json HTTP " + r.status);
           return r.json();
         });
@@ -692,10 +697,17 @@
 
   window.addEventListener("popstate", route);
 
-  app.innerHTML = '<p class="empty-note">Loading videos…</p>';
-  loadVideos()
-    .then(function () { route(); })
-    .catch(function () {
-      app.innerHTML = '<p class="empty-note">Videos could not be loaded. Please try again later.</p>';
-    });
+  function boot() {
+    app.innerHTML = '<p class="empty-note">Loading videos…</p>';
+    loadVideos()
+      .then(function () { route(); })
+      .catch(function () {
+        app.innerHTML =
+          '<p class="empty-note">Videos could not be loaded. Please try again later.</p>' +
+          '<p class="empty-note"><button id="retryLoad" type="button">Try again</button></p>';
+        var b = document.getElementById("retryLoad");
+        if (b) b.addEventListener("click", boot);
+      });
+  }
+  boot();
 })();
