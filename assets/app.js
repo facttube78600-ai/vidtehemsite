@@ -93,13 +93,13 @@
       });
   }
 
-  /* Brand row — one image slot per tag. Slot images live at
-     assets/images/brands/<tag-slug>.jpg — replace these 8 files
-     with your own brand/category images (same names, 284x126). */
+  /* Brand row — COLOURED TEXT BUTTONS (not images), one per tag:
+     ~95x50, vertical gradient, white bold uppercase text, 4px gaps.
+     Colours sampled from the user's button screenshot. */
   brandRow.innerHTML = TAGS.map(function (t) {
     return (
-      '<li><a href="' + tagUrl(t) + '" data-tag="' + esc(t) + '" aria-label="' + esc(t) + '" title="' + esc(t) + '">' +
-      '<img src="assets/images/brands/' + tagSlug(t) + '.jpg" alt="' + esc(t) + '" width="95" height="42" />' +
+      '<li><a class="brand-' + tagSlug(t) + '" href="' + tagUrl(t) + '" data-tag="' + esc(t) + '" aria-label="' + esc(t) + '" title="' + esc(t) + '">' +
+      esc(t.toUpperCase()) +
       "</a></li>"
     );
   }).join("");
@@ -116,25 +116,29 @@
   function adRect() { return '<div class="ad-slot rect" role="complementary" aria-label="Advertisement slot">Advertisement</div>'; }
 
   /* ---------- Cards & pagination ---------- */
+  /* Reference card: .thumb_wrap > a.thumb_link (image + timer only) +
+     sibling .thumb_title strip OUTSIDE the link. Only the image is
+     clickable; the title strip is pale teal, one truncated line. */
   function cardHtml(v) {
     return (
-      '<a class="card" href="' + videoUrl(v) + '" title="' + esc(v.title) + '">' +
-        '<span class="thumb">' +
-          '<img src="' + esc(v.thumb) + '" alt="' + esc(v.title) + '" loading="lazy" />' +
-          '<span class="play-hint"><i></i></span>' +
-          '<span class="duration">' + esc(v.duration) + "</span>" +
-        "</span>" +
-        '<span class="strip">' + esc(v.title) + "</span>" +
-      "</a>"
+      '<div class="thumb_wrap">' +
+        '<a href="' + videoUrl(v) + '" class="thumb_link" title="' + esc(v.title) + '">' +
+          '<div class="thumb_img">' +
+            '<img class="img_prev" src="' + esc(v.thumb) + '" alt="' + esc(v.title) + '" loading="lazy" width="100%" height="auto" />' +
+            '<div class="timer">' + esc(v.duration) + "</div>" +
+          "</div>" +
+        "</a>" +
+        '<div class="thumb_title">' + esc(v.title) + "</div>" +
+      "</div>"
     );
   }
 
-  /* Page-number window, reference style:
-       near the start  -> 1 2 3 4 5 6 7 … last
-       near the end    -> 1 … last-6 … last
-       in the middle   -> 1 … current-1 current current+1 … last
-     A gap of exactly one page is filled with that page number
-     instead of a "…". */
+  /* Page-number window, reference style (NO Prev/Next arrows):
+       near the start  -> 1 2 3 4 5 6 7 . last
+       near the end    -> 1 . last-6 . last
+       in the middle   -> 1 . current-1 current current+1 . last
+     The separator is a single "." (not an ellipsis). A gap of
+     exactly one page is filled with that page number instead. */
   function pageList(current, total) {
     if (total <= 9) {
       var all = [];
@@ -157,7 +161,7 @@
     var out = [], prev = 0;
     sorted.forEach(function (n) {
       if (prev && n - prev === 2) out.push(prev + 1);
-      else if (prev && n - prev > 2) out.push("…");
+      else if (prev && n - prev > 2) out.push(".");
       out.push(n);
       prev = n;
     });
@@ -167,21 +171,11 @@
   function paginationHtml(current, total, hrefFor) {
     if (total <= 1) return "";
     var html = '<nav class="pagination" aria-label="Pages">';
-    if (current > 1) {
-      html += '<a class="prev" href="' + hrefFor(current - 1) + '" aria-label="Previous page">«</a>';
-    } else {
-      html += '<span class="prev disabled" aria-hidden="true">«</span>';
-    }
     pageList(current, total).forEach(function (p) {
-      if (p === "…") html += '<span class="dots" aria-hidden="true">…</span>';
+      if (p === ".") html += '<span class="dots" aria-hidden="true">.</span>';
       else if (p === current) html += '<span class="current" aria-current="page">' + p + "</span>";
       else html += '<a href="' + hrefFor(p) + '" aria-label="Page ' + p + '">' + p + "</a>";
     });
-    if (current < total) {
-      html += '<a class="next" href="' + hrefFor(current + 1) + '" aria-label="Next page">»</a>';
-    } else {
-      html += '<span class="next disabled" aria-hidden="true">»</span>';
-    }
     return html + "</nav>";
   }
 
@@ -206,11 +200,11 @@
     if (!list.length) return '<div class="wrap"><p class="empty-note">No videos found.</p></div>';
     var cards = gridPage(list, page).map(cardHtml).join("");
     return (
-      '<div class="wrap">' + paginationHtml(page, totalPages(list), hrefFor) + "</div>" +
       '<div class="wrap">' + adWide() + "</div>" +
+      '<div class="wrap">' + paginationHtml(page, totalPages(list), hrefFor) + "</div>" +
       '<div class="wrap"><div class="grid">' + cards + "</div></div>" +
-      '<div class="wrap">' + adWide() + "</div>" +
       '<div class="wrap">' + paginationHtml(page, totalPages(list), hrefFor) + "</div>" +
+      '<div class="wrap">' + adRect() + "</div>" +
       '<div class="wrap">' + adWide() + "</div>"
     );
   }
@@ -253,7 +247,7 @@
       });
   }
 
-  var relatedShown = PER_PAGE;
+  var RELATED_PER_PAGE = 24; /* reference shows 24 related videos */
 
   function relatedList(video) {
     var sameTag = VIDEOS.filter(function (v) { return v.tag === video.tag && v.id !== video.id; });
@@ -266,7 +260,6 @@
     VIDEOS.forEach(function (v) { if (v.id === id) video = v; });
     if (!video) { homeView(1); return; }
     markActiveTag(video.tag);
-    relatedShown = PER_PAGE;
     document.title = video.title + " — VidTheme";
 
     var tagLinks = TAGS.map(function (t) {
@@ -288,31 +281,27 @@
           '<div class="embed-responsive embed-responsive-16by9">This video could not be loaded. Please try again later.</div>' +
         "</div>";
 
+    /* Reference video-page order: ad(100), title bar, player, tags,
+       ads(250,100,250), Related heading, related grid (24), Show-more
+       LINK button to the tag page, ads(250,100). */
+    var rel = relatedList(video);
+    var relatedCards = rel.slice(0, RELATED_PER_PAGE).map(cardHtml).join("");
+    var showMoreHtml =
+      '<div class="loadbtn"><button class="button btn" type="button">' +
+      '<a href="' + tagUrl(video.tag || TAGS[0]) + '">Show more related videos</a>' +
+      "</button></div>";
     app.innerHTML =
       '<div class="wrap">' + adWide() + "</div>" +
       '<div class="wrap">' +
         '<div class="video-title-bar"><h1>' + esc(video.title) + "</h1></div>" +
         playerHtml +
         '<div class="video-tags">' + tagLinks + "</div>" +
-        adRect() + adRect() + adRect() +
+        adRect() + adWide() + adRect() +
       "</div>" +
       '<div class="wrap"><div class="related-heading"><div class="related-label">Related Videos</div><div class="related-line"></div></div></div>' +
-      '<div class="wrap"><div class="grid" id="relatedGrid"></div>' +
-      '<div class="show-more-row"><button class="show-more" id="showMoreBtn" type="button">Show more</button></div>' +
-      adWide() + adWide() + "</div>";
-
-    var rel = relatedList(video);
-    var grid = document.getElementById("relatedGrid");
-    var btn = document.getElementById("showMoreBtn");
-    function drawRelated() {
-      grid.innerHTML = rel.slice(0, relatedShown).map(cardHtml).join("");
-      btn.style.display = relatedShown >= rel.length ? "none" : "";
-    }
-    btn.addEventListener("click", function () {
-      relatedShown += PER_PAGE;
-      drawRelated();
-    });
-    drawRelated();
+      '<div class="wrap"><div class="grid">' + relatedCards + "</div>" +
+      showMoreHtml +
+      adRect() + adWide() + "</div>";
   }
 
   var INFO = {
@@ -359,7 +348,7 @@
       "</div></div>";
   }
 
-  /* ---------- Share strip + rail: share the current page ---------- */
+  /* ---------- Share strip (mobile only): share the current page ---------- */
   function updateShareLinks() {
     var url = window.location.href;
     var title = document.title || "VidTheme";
@@ -435,7 +424,7 @@
     } else {
       homeView(1);
     }
-    updateShareLinks(); /* share strip + rail follow SPA navigation */
+    updateShareLinks(); /* share strip follows SPA navigation */
     window.scrollTo(0, 0);
   }
 
