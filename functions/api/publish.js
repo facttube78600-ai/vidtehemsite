@@ -80,6 +80,37 @@ function noAngle(s) {
   return typeof s === "string" && !/[<>]/.test(s);
 }
 
+/* ---- Image upload (admin) ---- */
+const IMAGE_EXTS = [".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg"];
+const IMAGE_MAX_BYTES = 5 * 1024 * 1024; /* 5 MB */
+const IMAGE_UPLOAD_DIR = "assets/uploads/";
+function imageExt(filename) {
+  const base = String(filename || "").split(/[\\/]/).pop().toLowerCase();
+  const dot = base.lastIndexOf(".");
+  return dot > 0 ? base.slice(dot) : "";
+}
+/* SEO-friendly file name: lower-case, words joined with hyphens,
+   timestamp-prefixed so uploads never collide. */
+function safeImageName(filename) {
+  const base = String(filename || "").split(/[\\/]/).pop().trim().toLowerCase();
+  const dot = base.lastIndexOf(".");
+  const ext = dot > 0 ? base.slice(dot) : "";
+  let stem = (dot > 0 ? base.slice(0, dot) : base).replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
+  if (!stem) stem = "image";
+  if (!IMAGE_EXTS.includes(ext)) return null;
+  return Date.now() + "-" + stem + ext;
+}
+function validateImageUpload(img) {
+  if (!img || typeof img !== "object") return "image is required";
+  if (typeof img.filename !== "string" || !img.filename.trim()) return "image.filename is required";
+  if (!IMAGE_EXTS.includes(imageExt(img.filename))) return "image file type must be jpg, jpeg, png, webp, gif or svg";
+  if (typeof img.data !== "string" || !img.data.trim()) return "image.data is required (base64)";
+  if (!/^[A-Za-z0-9+/=\s]+$/.test(img.data)) return "image.data must be base64";
+  const bytes = Math.floor(img.data.replace(/\s/g, "").length * 3 / 4);
+  if (bytes > IMAGE_MAX_BYTES) return "image is too large (max 5 MB)";
+  return null;
+}
+
 function validateVideo(v) {
   if (!v || typeof v !== "object") return "video is required";
   if (typeof v.id !== "number" || !Number.isInteger(v.id) || v.id < 1) return "video.id must be a positive integer";
@@ -90,7 +121,7 @@ function validateVideo(v) {
   let url;
   try { url = new URL(v.embed_url); } catch { return "video.embed_url must be a valid URL"; }
   if (url.protocol !== "https:") return "video.embed_url must use https";
-  if (v.duration && !/^\d{1,3}:\d{2}$/.test(v.duration)) return "video.duration must look like mm:ss";
+  if (v.duration && !/^(\d{1,3}:\d{2}|\d{1,2}:\d{2}:\d{2})$/.test(v.duration)) return "video.duration must look like mm:ss or hh:mm:ss";
   if (v.thumbnail && typeof v.thumbnail !== "string") return "video.thumbnail is invalid";
   if (v.thumbnail && v.thumbnail.length > 500) return "video.thumbnail is too long";
   if (!v.category || !TAGS.includes(v.category)) return "video.category must be one of: " + TAGS.join(", ");
@@ -109,6 +140,8 @@ function validateVideo(v) {
   if (v.og_title !== undefined && (typeof v.og_title !== "string" || v.og_title.length > 200 || /[<>]/.test(v.og_title))) return "video.og_title is invalid (max 200 chars, no < >)";
   if (v.og_description !== undefined && (typeof v.og_description !== "string" || v.og_description.length > 300 || /[<>]/.test(v.og_description))) return "video.og_description is invalid (max 300 chars, no < >)";
   if (v.og_image !== undefined && (typeof v.og_image !== "string" || v.og_image.length > 500 || /[<>]/.test(v.og_image))) return "video.og_image is invalid (max 500 chars, no < >)";
+  if (v.thumb_alt !== undefined && (typeof v.thumb_alt !== "string" || v.thumb_alt.length > 200 || /[<>]/.test(v.thumb_alt))) return "video.thumb_alt is invalid (max 200 chars, no < >)";
+  if (v.og_image_alt !== undefined && (typeof v.og_image_alt !== "string" || v.og_image_alt.length > 200 || /[<>]/.test(v.og_image_alt))) return "video.og_image_alt is invalid (max 200 chars, no < >)";
   if (v.twitter_card !== undefined && v.twitter_card !== "summary" && v.twitter_card !== "summary_large_image") return "video.twitter_card must be summary or summary_large_image";
   if (v.canonical !== undefined && (typeof v.canonical !== "string" || v.canonical.length > 500 || /[<>]/.test(v.canonical))) return "video.canonical is invalid (max 500 chars, no < >)";
   if (v.canonical && !/^https:\/\//.test(v.canonical)) return "video.canonical must be an https URL";
@@ -135,6 +168,8 @@ function normalise(v) {
     og_title: (v.og_title || "").trim(),
     og_description: (v.og_description || "").trim(),
     og_image: (v.og_image || "").trim(),
+    thumb_alt: (v.thumb_alt || "").trim(),
+    og_image_alt: (v.og_image_alt || "").trim(),
     twitter_card: v.twitter_card === "summary" ? "summary" : "summary_large_image",
     canonical: (v.canonical || "").trim(),
   };
@@ -146,6 +181,7 @@ function validateSettings(s) {
   if (s.siteDescription !== undefined && (typeof s.siteDescription !== "string" || s.siteDescription.length > 200 || !noAngle(s.siteDescription))) return "settings.siteDescription is invalid (max 200 chars, no < >)";
   if (s.siteKeywords !== undefined && (typeof s.siteKeywords !== "string" || s.siteKeywords.length > 500 || !noAngle(s.siteKeywords))) return "settings.siteKeywords is invalid (max 500 chars, no < >)";
   if (s.ogImage !== undefined && (typeof s.ogImage !== "string" || s.ogImage.length > 500 || !noAngle(s.ogImage))) return "settings.ogImage is invalid (max 500 chars, no < >)";
+  if (s.ogImageAlt !== undefined && (typeof s.ogImageAlt !== "string" || s.ogImageAlt.length > 200 || !noAngle(s.ogImageAlt))) return "settings.ogImageAlt is invalid (max 200 chars, no < >)";
   if (s.twitterCard !== undefined && s.twitterCard !== "summary" && s.twitterCard !== "summary_large_image") return "settings.twitterCard must be summary or summary_large_image";
   if (s.headerCode !== undefined && (typeof s.headerCode !== "string" || s.headerCode.length > 20000)) return "settings.headerCode is too long (max 20000 chars)";
   if (s.ads !== undefined) {
@@ -163,6 +199,7 @@ function validateSettings(s) {
       if (typeof b.label !== "string" || !b.label.trim() || b.label.length > 40 || !noAngle(b.label)) return "brand label is invalid (max 40 chars, no < >)";
       if (typeof b.color !== "string" || !/^#[0-9a-fA-F]{6}$/.test(b.color)) return "brand color must be a #rrggbb hex value";
       if (b.image !== undefined && (typeof b.image !== "string" || b.image.length > 500 || !noAngle(b.image))) return "brand image is invalid (max 500 chars, no < >)";
+      if (b.alt !== undefined && (typeof b.alt !== "string" || b.alt.length > 100 || !noAngle(b.alt))) return "brand alt is invalid (max 100 chars, no < >)";
       if (typeof b.link !== "string" || !b.link.trim() || b.link.length > 500 || !noAngle(b.link)) return "brand link is invalid (max 500 chars, no < >)";
       if (typeof b.enabled !== "boolean") return "brand enabled must be true or false";
     }
@@ -176,6 +213,7 @@ function normaliseSettings(s) {
   if (s.siteDescription !== undefined) out.siteDescription = s.siteDescription.trim();
   if (s.siteKeywords !== undefined) out.siteKeywords = s.siteKeywords.trim();
   if (s.ogImage !== undefined) out.ogImage = s.ogImage.trim();
+  if (s.ogImageAlt !== undefined) out.ogImageAlt = s.ogImageAlt.trim();
   if (s.twitterCard !== undefined) out.twitterCard = s.twitterCard;
   if (s.headerCode !== undefined) out.headerCode = s.headerCode;
   if (s.ads !== undefined) {
@@ -189,6 +227,7 @@ function normaliseSettings(s) {
       label: b.label.trim(),
       color: b.color,
       image: (b.image || "").trim(),
+      alt: (b.alt || "").trim(),
       link: b.link.trim(),
       enabled: !!b.enabled,
     }));
@@ -247,6 +286,46 @@ export async function onRequestPost(context) {
     }
   }
 
+  async function writeBinary(path, sha, base64content, message) {
+    const apiBase = "https://api.github.com/repos/" + owner + "/" + repoName + "/contents/" + path;
+    const put = await fetch(apiBase, {
+      method: "PUT",
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: JSON.stringify({ message, content: base64content.replace(/\s/g, ""), branch, ...(sha ? { sha } : {}) }),
+    });
+    if (!put.ok) {
+      const detail = await put.text();
+      throw new Error("GitHub commit failed (HTTP " + put.status + "): " + detail.slice(0, 300));
+    }
+  }
+
+  async function getSha(path) {
+    const apiBase = "https://api.github.com/repos/" + owner + "/" + repoName + "/contents/" + path;
+    const res = await fetch(apiBase + "?ref=" + encodeURIComponent(branch), { headers });
+    if (res.status === 404) return null;
+    if (res.status !== 200) throw new Error("Could not read " + path + " from GitHub (HTTP " + res.status + ")");
+    const data = await res.json();
+    return data.sha || null;
+  }
+
+  // ---- Image upload: { password, image: { filename, data } } ----
+  // data is the file as a base64 string. Stored under
+  // assets/uploads/ with an SEO-friendly file name; the admin
+  // puts the returned path into the image field.
+  if (body.image !== undefined) {
+    const err = validateImageUpload(body.image);
+    if (err) return json(400, { error: err });
+    try {
+      const name = safeImageName(body.image.filename);
+      const path = IMAGE_UPLOAD_DIR + name;
+      const sha = await getSha(path);
+      await writeBinary(path, sha, body.image.data, "Upload image " + name + " via admin");
+      return json(200, { ok: true, path: "/" + path, message: "Image uploaded: /" + path });
+    } catch (e) {
+      return json(502, { error: e.message });
+    }
+  }
+
   // ---- Site settings save: { password, settings } ----
   if (body.settings !== undefined) {
     const err = validateSettings(body.settings);
@@ -298,5 +377,5 @@ export async function onRequestPost(context) {
 
 export async function onRequest(context) {
   if (context.request.method === "POST") return onRequestPost(context);
-  return json(405, { error: "Use POST with {password, video} or {password, settings}." });
+  return json(405, { error: "Use POST with {password, video}, {password, settings} or {password, image}." });
 }
