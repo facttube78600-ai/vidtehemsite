@@ -290,13 +290,13 @@
 
     app.innerHTML =
       '<div class="wrap">' + adWide() + "</div>" +
-      headingBar(video.title, true) +
       '<div class="wrap">' +
+        '<div class="video-title-bar"><h1>' + esc(video.title) + "</h1></div>" +
         playerHtml +
-        '<p class="video-tags"><span class="lbl">Tags:</span>' + tagLinks + "</p>" +
+        '<div class="video-tags">' + tagLinks + "</div>" +
         adRect() + adRect() + adRect() +
       "</div>" +
-      '<div class="heading-bar left"><div class="wrap"><h2>Related Videos</h2></div></div>' +
+      '<div class="wrap"><div class="related-heading"><div class="related-label">Related Videos</div><div class="related-line"></div></div></div>' +
       '<div class="wrap"><div class="grid" id="relatedGrid"></div>' +
       '<div class="show-more-row"><button class="show-more" id="showMoreBtn" type="button">Show more</button></div>' +
       adWide() + adWide() + "</div>";
@@ -359,6 +359,51 @@
       "</div></div>";
   }
 
+  /* ---------- Share strip + rail: share the current page ---------- */
+  function updateShareLinks() {
+    var url = window.location.href;
+    var title = document.title || "VidTheme";
+    var u = encodeURIComponent(url);
+    var t = encodeURIComponent(title);
+    var map = {
+      x: "https://twitter.com/intent/tweet?url=" + u + "&text=" + t,
+      wa: "https://api.whatsapp.com/send?text=" + t + "%20" + u,
+      reddit: "https://www.reddit.com/submit?url=" + u + "&title=" + t,
+      msg: "https://www.facebook.com/dialog/send?link=" + u,
+      tg: "https://t.me/share/url?url=" + u + "&text=" + t
+    };
+    var links = document.querySelectorAll("[data-share]");
+    for (var i = 0; i < links.length; i++) {
+      var k = links[i].getAttribute("data-share");
+      if (map[k]) links[i].setAttribute("href", map[k]);
+    }
+  }
+
+  function shareCurrent(btn) {
+    var url = window.location.href;
+    var title = document.title || "VidTheme";
+    if (typeof navigator !== "undefined" && navigator.share) {
+      navigator.share({ title: title, url: url }).catch(function () {});
+    } else if (typeof navigator !== "undefined" && navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(function () {
+        if (!btn) return;
+        var old = btn.textContent;
+        btn.textContent = "Copied!";
+        setTimeout(function () { btn.textContent = old; }, 1500);
+      }, function () { window.prompt("Copy this link:", url); });
+    } else {
+      window.prompt("Copy this link:", url);
+    }
+  }
+
+  var moreBtns = document.querySelectorAll('[data-share="more"]');
+  for (var m = 0; m < moreBtns.length; m++) {
+    moreBtns[m].addEventListener("click", function (e) {
+      shareCurrent(e.currentTarget || e.target);
+    });
+  }
+  updateShareLinks();
+
   /* ---------- Routing (clean URLs, History API) ---------- */
   function parseQuery(search) {
     var out = {};
@@ -390,6 +435,7 @@
     } else {
       homeView(1);
     }
+    updateShareLinks(); /* share strip + rail follow SPA navigation */
     window.scrollTo(0, 0);
   }
 
