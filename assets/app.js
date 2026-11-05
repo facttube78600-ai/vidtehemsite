@@ -61,6 +61,93 @@
   function videoUrl(v) { return "/video/" + v.slug + "-" + v.id + ".html"; }
   function tagUrl(tag) { return "/tags/" + tagSlug(tag) + ".html"; }
 
+  /* ---------- Professional meta tags (per route) ----------
+     Structure only, modelled on a professional video site's head:
+     title, keywords, description, canonical, robots, Open Graph
+     (incl. og:video for video pages) and Twitter Card, plus a
+     VideoObject JSON-LD on video pages. All values come from our
+     own videos/categories — nothing is copied from any other site. */
+  var SITE_URL = "https://vidtehemsite.pages.dev";
+  var HOME_TITLE = "VidTheme: Free HD Videos by Category";
+  var HOME_DESC = "VidTheme — browse free videos by category. Nature, Travel, Food, Ocean Life, Mountains, City Life, Winter and Sky videos, all in one place.";
+  var HOME_KEYWORDS = "vidtheme, nature videos, travel videos, food videos, ocean life videos, mountain videos, city life videos, winter videos, sky videos, free videos";
+  var HOME_OG_IMAGE = SITE_URL + "/assets/og-image.svg";
+
+  function absUrl(u) {
+    if (!u) return "";
+    if (/^https?:\/\//i.test(u)) return u;
+    if (u.charAt(0) === "/") return SITE_URL + u;
+    return SITE_URL + "/" + u;
+  }
+  function durationSeconds(d) {
+    if (!d) return 0;
+    var p = String(d).split(":");
+    if (p.length !== 2) return 0;
+    var m = parseInt(p[0], 10), s = parseInt(p[1], 10);
+    if (isNaN(m) || isNaN(s)) return 0;
+    return m * 60 + s;
+  }
+  function isoDuration(d) {
+    var total = durationSeconds(d);
+    return "PT" + Math.floor(total / 60) + "M" + (total % 60) + "S";
+  }
+  function upsertMeta(attr, key, content) {
+    var el = document.querySelector(attr === "name" ? 'meta[name="' + key + '"]' : 'meta[property="' + key + '"]');
+    if (!el) {
+      el = document.createElement("meta");
+      el.setAttribute(attr, key);
+      document.head.appendChild(el);
+    }
+    el.setAttribute("content", content == null ? "" : content);
+  }
+  function upsertLink(rel, href) {
+    var el = document.querySelector('link[rel="' + rel + '"]');
+    if (!el) {
+      el = document.createElement("link");
+      el.setAttribute("rel", rel);
+      document.head.appendChild(el);
+    }
+    el.setAttribute("href", href);
+  }
+  function setJsonLd(obj) {
+    var old = document.getElementById("vt-ld");
+    if (old && old.parentNode) old.parentNode.removeChild(old);
+    if (!obj) return;
+    var s = document.createElement("script");
+    s.type = "application/ld+json";
+    s.id = "vt-ld";
+    s.text = JSON.stringify(obj);
+    document.head.appendChild(s);
+  }
+  function setMeta(o) {
+    document.title = o.title || HOME_TITLE;
+    upsertMeta("name", "description", o.description || HOME_DESC);
+    upsertMeta("name", "keywords", o.keywords || HOME_KEYWORDS);
+    upsertMeta("name", "robots", o.robots || "index, follow");
+    upsertMeta("name", "googlebot", o.robots || "index, follow");
+    if (o.canonical) upsertLink("canonical", o.canonical);
+    upsertMeta("property", "og:title", o.ogTitle || o.title || HOME_TITLE);
+    upsertMeta("property", "og:description", o.ogDescription || o.description || HOME_DESC);
+    upsertMeta("property", "og:image", o.ogImage || HOME_OG_IMAGE);
+    upsertMeta("property", "og:type", o.ogType || "website");
+    upsertMeta("property", "og:url", o.canonical || SITE_URL + "/");
+    upsertMeta("name", "twitter:card", o.twitterCard || "summary_large_image");
+    upsertMeta("name", "twitter:title", o.twitterTitle || o.ogTitle || o.title || HOME_TITLE);
+    upsertMeta("name", "twitter:description", o.twitterDescription || o.ogDescription || o.description || HOME_DESC);
+    upsertMeta("name", "twitter:image", o.twitterImage || o.ogImage || HOME_OG_IMAGE);
+    ["og:video:type", "og:video:width", "og:video:height", "og:video:duration"].forEach(function (k) {
+      var el = document.querySelector('meta[property="' + k + '"]');
+      if (el && el.parentNode) el.parentNode.removeChild(el);
+    });
+    if (o.ogVideo) {
+      upsertMeta("property", "og:video:type", o.ogVideo.type || "text/html");
+      upsertMeta("property", "og:video:width", String(o.ogVideo.width || 1280));
+      upsertMeta("property", "og:video:height", String(o.ogVideo.height || 720));
+      if (o.ogVideo.duration) upsertMeta("property", "og:video:duration", String(o.ogVideo.duration));
+    }
+    setJsonLd(o.jsonLd || null);
+  }
+
   /* Normalise one videos.json entry to the shape the views use. */
   function normalise(v) {
     var tags = v.tags && v.tags.length ? v.tags : (v.tag ? [v.tag] : (v.category ? [v.category] : []));
@@ -75,7 +162,16 @@
       tag: tags[0] || "",
       category: v.category || tags[0] || "",
       date: v.date || "",
-      status: v.status === "draft" ? "draft" : "published"
+      status: v.status === "draft" ? "draft" : "published",
+      seo_title: v.seo_title || "",
+      meta_description: v.meta_description || "",
+      meta_keywords: v.meta_keywords || "",
+      focus_keyword: v.focus_keyword || "",
+      og_title: v.og_title || "",
+      og_description: v.og_description || "",
+      og_image: v.og_image || "",
+      twitter_card: v.twitter_card === "summary" ? "summary" : "summary_large_image",
+      canonical: v.canonical || ""
     };
   }
 
@@ -282,7 +378,14 @@
     markActiveTag(null);
     var list = VIDEOS.slice().reverse(); /* newest first */
     page = clampPage(page, list);
-    document.title = "VidTheme";
+    setMeta({
+      title: page > 1 ? "Latest Videos — Page " + page + " | VidTheme" : HOME_TITLE,
+      description: HOME_DESC,
+      keywords: HOME_KEYWORDS,
+      canonical: SITE_URL + (page > 1 ? "/page/" + String(page).padStart(2, "0") + ".html" : "/"),
+      ogType: "website",
+      ogImage: HOME_OG_IMAGE
+    });
     app.innerHTML =
       toptitle("Latest Videos", true) +
       renderGridInto(list, page, function (p) { return p === 1 ? "/" : "/page/" + String(p).padStart(2, "0") + ".html"; });
@@ -293,7 +396,13 @@
     markActiveTag(tag);
     var list = VIDEOS.filter(function (v) { return v.tag === tag || v.tags.indexOf(tag) !== -1; }).reverse();
     page = clampPage(page, list);
-    document.title = tag + " 2026 Videos — VidTheme";
+    setMeta({
+      title: tag + " Videos | VidTheme",
+      description: "Watch free " + tag.toLowerCase() + " videos on VidTheme.",
+      keywords: tag.toLowerCase() + " videos, " + HOME_KEYWORDS,
+      canonical: SITE_URL + tagUrl(tag) + (page > 1 ? "?p=" + page : ""),
+      ogType: "website"
+    });
     app.innerHTML =
       toptitle(tag.toUpperCase() + " 2026 Videos", true) +
       renderGridInto(list, page, function (p) {
@@ -309,7 +418,14 @@
       return v.title.toLowerCase().indexOf(q) !== -1 || v.tag.toLowerCase().indexOf(q) !== -1;
     }).reverse();
     page = clampPage(page, list);
-    document.title = "Search: " + query + " — VidTheme";
+    setMeta({
+      title: "Search: " + query + " — VidTheme",
+      description: 'Search results for "' + query + '" on VidTheme.',
+      keywords: query + ", " + HOME_KEYWORDS,
+      canonical: SITE_URL + "/search?q=" + encodeURIComponent(query),
+      robots: "noindex, follow",
+      ogType: "website"
+    });
     app.innerHTML =
       toptitle('Search Results for "' + query + '"', true) +
       renderGridInto(list, page, function (p) {
@@ -328,7 +444,14 @@
 
   function notFoundView() {
     markActiveTag(null);
-    document.title = "Video not found — VidTheme";
+    setMeta({
+      title: "Page Not Found | VidTheme",
+      description: "This page does not exist on VidTheme.",
+      keywords: HOME_KEYWORDS,
+      canonical: SITE_URL + (window.location.pathname || "/"),
+      robots: "noindex, nofollow",
+      ogType: "website"
+    });
     app.innerHTML =
       toptitle("Video Not Found", true) +
       '<p class="empty-note">This video does not exist or is not published yet. <a href="/">Back to the homepage</a></p>';
@@ -342,7 +465,35 @@
        simply absent there — ALL_VIDEOS is checked instead.) */
     if (!video || video.status === "draft") { notFoundView(); return; }
     markActiveTag(video.tag);
-    document.title = video.title + " — VidTheme";
+    var vTitle = video.seo_title || video.title;
+    var vDesc = video.meta_description || ("Watch " + video.title + " on VidTheme — free " + (video.category || video.tag || "video").toLowerCase() + " video.");
+    var vKw = video.meta_keywords || video.tags.join(", ");
+    var vCanon = video.canonical || (SITE_URL + videoUrl(video));
+    var vOgImg = absUrl(video.og_image || video.thumb || "/assets/og-image.svg");
+    setMeta({
+      title: vTitle + " | VidTheme",
+      description: vDesc,
+      keywords: vKw,
+      canonical: vCanon,
+      ogType: "video.movie",
+      ogTitle: video.og_title || (vTitle + " | VidTheme"),
+      ogDescription: video.og_description || vDesc,
+      ogImage: vOgImg,
+      ogVideo: { type: "text/html", width: 1280, height: 720, duration: durationSeconds(video.duration) },
+      twitterCard: video.twitter_card || "summary_large_image",
+      twitterImage: vOgImg,
+      jsonLd: {
+        "@context": "https://schema.org",
+        "@type": "VideoObject",
+        name: video.title,
+        description: vDesc,
+        thumbnailUrl: vOgImg,
+        uploadDate: video.date || "",
+        duration: isoDuration(video.duration),
+        embedUrl: video.embed_url || "",
+        contentUrl: vCanon
+      }
+    });
 
     /* Reference tags: .tags > .tagsstyle > a, one box per tag,
        no "Tags:" label, no border on the boxes. */
@@ -423,7 +574,13 @@
   function infoView(key) {
     markActiveTag(null);
     var page = INFO[key];
-    document.title = page.title + " — VidTheme";
+    setMeta({
+      title: page.title + " | VidTheme",
+      description: page.body[0] || HOME_DESC,
+      keywords: page.title.toLowerCase() + ", " + HOME_KEYWORDS,
+      canonical: SITE_URL + "/" + key,
+      ogType: "website"
+    });
     app.innerHTML =
       toptitle(page.title, true) +
       '<div class="info-box">' +
