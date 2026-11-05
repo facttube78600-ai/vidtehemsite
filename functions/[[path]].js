@@ -158,7 +158,7 @@ function injectHeader(html, code) {
 
 function videoUrl(v) {
   var cat = slugify(v.category || (v.tags && v.tags[0]) || "video");
-  return "/" + cat + "/" + (v.slug || "video") + "-" + v.id + ".html";
+  return "/" + cat + "/" + (v.slug || "video") + ".html";
 }
 
 function videoMeta(v, site) {
@@ -294,9 +294,10 @@ export async function onRequest(context) {
     });
   }
 
-  const legacyVideoMatch = /^\/video\/.+-(\d+)\.html$/.exec(path);
-  const videoMatch = /^\/([a-z0-9-]+)\/(.+)-(\d+)\.html$/.exec(path);
-  const isVideo = !!legacyVideoMatch || (!!videoMatch && isCategorySlug(videoMatch[1]));
+  const legacyVideoMatch = /^\/video\/(.+)-(\d+)\.html$/.exec(path);
+  const legacyCatMatch = /^\/([a-z0-9-]+)\/(.+)-(\d+)\.html$/.exec(path);
+  const videoMatch = /^\/([a-z0-9-]+)\/([a-z0-9-]+)\.html$/.exec(path);
+  const isVideo = !!legacyVideoMatch || (!!legacyCatMatch && isCategorySlug(legacyCatMatch[1])) || (!!videoMatch && isCategorySlug(videoMatch[1]));
   const pageMatch = /^\/page\/(\d+)\.html$/.exec(path);
   const tagMatch = /^\/tags\/([a-z0-9-]+)\.html$/.exec(path);
   const isPage =
@@ -317,14 +318,15 @@ export async function onRequest(context) {
   const settings = await loadJsonAsset(context, url, "site-settings.json");
   const site = siteMeta(settings);
 
-  // Legacy video URL: 301 to the category URL.
+  // Legacy video URL: 301 to the clean slug-only URL. The id must
+  // belong to the video whose slug precedes it.
   if (legacyVideoMatch) {
-    const id = parseInt(legacyVideoMatch[1], 10);
+    const id = parseInt(legacyVideoMatch[2], 10);
     const list = await loadJsonAsset(context, url, "videos.json");
     const arr = Array.isArray(list) ? list : (list && list.videos) || [];
     let video = null;
     for (const v of arr) {
-      if (v.id === id) {
+      if (v.id === id && v.slug === legacyVideoMatch[1]) {
         video = v;
         break;
       }
@@ -338,17 +340,36 @@ export async function onRequest(context) {
     return Response.redirect(SITE_URL + videoUrl(video), 301);
   }
 
-  const res = await context.env.ASSETS.fetch(new URL("/index.html", url));
-  let html = await res.text();
-
-  // Video page: inject the per-video meta; unknown id or draft = 404.
-  if (videoMatch) {
-    const id = parseInt(videoMatch[3], 10);
+  // Legacy category URL (/sky/<slug>-<id>.html): 301 to the clean
+  // slug-only URL. If the id/slug do not belong together, fall
+  // through — the path may be a new slug that ends in digits.
+  if (legacyCatMatch) {
+    const id = parseInt(legacyCatMatch[3], 10);
     const list = await loadJsonAsset(context, url, "videos.json");
     const arr = Array.isArray(list) ? list : (list && list.videos) || [];
     let video = null;
     for (const v of arr) {
-      if (v.id === id) {
+      if (v.id === id && v.slug === legacyCatMatch[2] && slugify(v.category || (v.tags && v.tags[0]) || "") === legacyCatMatch[1]) {
+        video = v;
+        break;
+      }
+    }
+    if (video && video.status !== "draft") {
+      return Response.redirect(SITE_URL + videoUrl(video), 301);
+    }
+  }
+
+  const res = await context.env.ASSETS.fetch(new URL("/index.html", url));
+  let html = await res.text();
+
+  // Video page: inject the per-video meta; unknown slug or draft = 404.
+  if (videoMatch && isCategorySlug(videoMatch[1])) {
+    const slug = videoMatch[2];
+    const list = await loadJsonAsset(context, url, "videos.json");
+    const arr = Array.isArray(list) ? list : (list && list.videos) || [];
+    let video = null;
+    for (const v of arr) {
+      if (v.slug === slug) {
         video = v;
         break;
       }
