@@ -127,7 +127,7 @@ function buildThumbSvg(title, category) {
 }
 
 /* ---- Image upload (admin) ---- */
-const IMAGE_EXTS = [".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg"];
+const IMAGE_EXTS = [".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg", ".ico"];
 const IMAGE_MAX_BYTES = 5 * 1024 * 1024; /* 5 MB */
 const IMAGE_UPLOAD_DIR = "assets/uploads/";
 function imageExt(filename) {
@@ -149,7 +149,7 @@ function safeImageName(filename) {
 function validateImageUpload(img) {
   if (!img || typeof img !== "object") return "image is required";
   if (typeof img.filename !== "string" || !img.filename.trim()) return "image.filename is required";
-  if (!IMAGE_EXTS.includes(imageExt(img.filename))) return "image file type must be jpg, jpeg, png, webp, gif or svg";
+  if (!IMAGE_EXTS.includes(imageExt(img.filename))) return "image file type must be jpg, jpeg, png, webp, gif, svg or ico";
   if (typeof img.data !== "string" || !img.data.trim()) return "image.data is required (base64)";
   if (!/^[A-Za-z0-9+/=\s]+$/.test(img.data)) return "image.data must be base64";
   const bytes = Math.floor(img.data.replace(/\s/g, "").length * 3 / 4);
@@ -228,6 +228,9 @@ function validateSettings(s) {
   if (s.siteKeywords !== undefined && (typeof s.siteKeywords !== "string" || s.siteKeywords.length > 500 || !noAngle(s.siteKeywords))) return "settings.siteKeywords is invalid (max 500 chars, no < >)";
   if (s.ogImage !== undefined && (typeof s.ogImage !== "string" || s.ogImage.length > 500 || !noAngle(s.ogImage))) return "settings.ogImage is invalid (max 500 chars, no < >)";
   if (s.ogImageAlt !== undefined && (typeof s.ogImageAlt !== "string" || s.ogImageAlt.length > 200 || !noAngle(s.ogImageAlt))) return "settings.ogImageAlt is invalid (max 200 chars, no < >)";
+  if (s.favicon !== undefined && (typeof s.favicon !== "string" || s.favicon.length > 500 || !noAngle(s.favicon))) return "settings.favicon is invalid (max 500 chars, no < >)";
+  if (s.logoImage !== undefined && (typeof s.logoImage !== "string" || s.logoImage.length > 500 || !noAngle(s.logoImage))) return "settings.logoImage is invalid (max 500 chars, no < >)";
+  if (s.logoAlt !== undefined && (typeof s.logoAlt !== "string" || s.logoAlt.length > 200 || !noAngle(s.logoAlt))) return "settings.logoAlt is invalid (max 200 chars, no < >)";
   if (s.twitterCard !== undefined && s.twitterCard !== "summary" && s.twitterCard !== "summary_large_image") return "settings.twitterCard must be summary or summary_large_image";
   if (s.headerCode !== undefined && (typeof s.headerCode !== "string" || s.headerCode.length > 20000)) return "settings.headerCode is too long (max 20000 chars)";
   if (s.ads !== undefined) {
@@ -260,6 +263,9 @@ function normaliseSettings(s) {
   if (s.siteKeywords !== undefined) out.siteKeywords = s.siteKeywords.trim();
   if (s.ogImage !== undefined) out.ogImage = s.ogImage.trim();
   if (s.ogImageAlt !== undefined) out.ogImageAlt = s.ogImageAlt.trim();
+  if (s.favicon !== undefined) out.favicon = s.favicon.trim();
+  if (s.logoImage !== undefined) out.logoImage = s.logoImage.trim();
+  if (s.logoAlt !== undefined) out.logoAlt = s.logoAlt.trim();
   if (s.twitterCard !== undefined) out.twitterCard = s.twitterCard;
   if (s.headerCode !== undefined) out.headerCode = s.headerCode;
   if (s.ads !== undefined) {
