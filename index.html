@@ -21,7 +21,7 @@
         --card-bg: #ffffff;
         --body-text: #1a1a1a;
         --muted-text: #555555;
-        --content-w: 1240px;
+        --content-w: 1182px;
       }
 
       html { box-sizing: border-box; }
@@ -33,6 +33,7 @@
         font-family: Arial, Helvetica, sans-serif;
         font-size: 15px;
         line-height: 1.45;
+        padding-bottom: 40px; /* room for the fixed share strip at the bottom */
       }
       a { color: var(--page-blue); }
       img { display: block; max-width: 100%; }
@@ -112,7 +113,7 @@
 
       /* ---------- Video grid / cards ---------- */
       .grid {
-        display: grid; gap: 10px;
+        display: grid; gap: 8px;
         grid-template-columns: repeat(4, minmax(0, 1fr));
       }
       @media (max-width: 1020px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
@@ -158,25 +159,61 @@
       }
 
       /* ---------- Video page ---------- */
+      /* Title bar above the player: content-column width only (NOT
+         full-viewport), 47px tall, #212121, white bold left text. */
+      .video-title-bar {
+        background: #212121; height: 47px;
+        display: flex; align-items: center;
+        margin: 0 0 2px;
+      }
+      .video-title-bar h1 {
+        margin: 0; color: #fff; font-size: 19px; font-weight: bold;
+        line-height: 1.2; padding-left: 10px;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
       /* Player markup is the classic embed structure:
          .player > .embed-responsive.embed-responsive-16by9
          ("Loading Video..." text + iframe.embed-responsive-item inside) */
-      .player { background: #000; }
+      .player { background: #151616; padding: 4px; margin: 0 0 2px; }
       .embed-responsive {
         position: relative; display: flex; width: 100%;
         align-items: center; justify-content: center;
-        overflow: hidden; background: #000; color: #fff;
+        overflow: hidden; background: #151616; color: #fff;
         font-size: 19px; font-weight: bold; letter-spacing: .5px;
         text-align: center; padding: 0;
       }
       .embed-responsive-16by9 { aspect-ratio: 16 / 9; }
       .embed-responsive .embed-responsive-item {
         position: absolute; top: 0; left: 0;
-        width: 100%; height: 100%; border: 0; background: #000;
+        width: 100%; height: 100%; border: 0; background: #151616;
       }
-      .video-tags { padding: 12px 2px 2px; font-size: 15px; line-height: 1.9; }
-      .video-tags .lbl { font-weight: bold; color: #333; margin-right: 6px; }
-      .video-tags a { margin-right: 14px; white-space: nowrap; }
+      /* Tags directly below the player: NO "Tags:" label. A dark
+         #212121 strip across the full column, holding small boxed
+         (square-corner) links: #40403d fill, white regular text. */
+      .video-tags {
+        background: #212121; margin: 0 0 14px; padding: 6px 8px;
+        display: flex; flex-wrap: wrap; gap: 4px; align-items: center;
+      }
+      .video-tags a {
+        display: inline-flex; align-items: center; height: 22px;
+        padding: 0 8px; background: #40403d; color: #fff;
+        font-size: 12px; font-weight: normal; text-decoration: none;
+        border: 1px solid #b5b5b5; border-radius: 0; white-space: nowrap;
+      }
+      .video-tags a:hover { background: #55554f; }
+
+      /* Related Videos heading: NOT a full-width black bar. A small
+         magenta label box (113 x 25) with a 1px line in the same
+         colour spanning the full column, aligned with the label's
+         bottom edge (the line is the row directly below it). */
+      .related-heading { margin: 18px 0 14px; }
+      .related-heading .related-label {
+        display: inline-flex; align-items: center;
+        width: 113px; height: 25px; padding-left: 10px;
+        background: #ad1457; color: #fff;
+        font-size: 13px; font-weight: bold; line-height: 1;
+      }
+      .related-heading .related-line { height: 1px; background: #ad1457; }
 
       .show-more-row { text-align: center; margin: 18px 0 6px; }
       .show-more {
@@ -197,6 +234,41 @@
       .site-footer a { color: #fff; text-decoration: none; margin: 0 4px; }
       .site-footer a:hover { text-decoration: underline; color: #fff; }
       .site-footer .links { margin-top: 8px; }
+
+      /* ---------- Share strip (fixed bottom) + share rail (left) ---------- */
+      /* Reference style: 6 coloured segments sharing the current page.
+         Share links only — no pop-ups, pop-unders or floating ads. */
+      .share-strip {
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 1000;
+        display: flex; height: 40px;
+      }
+      .share-strip a, .share-strip button {
+        flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: center;
+        color: #fff; font-size: 13px; font-weight: bold; text-decoration: none;
+        border: 0; cursor: pointer; font-family: inherit; padding: 0 4px;
+        white-space: nowrap; overflow: hidden;
+      }
+      .share-rail {
+        position: fixed; left: 0; top: 50%; transform: translateY(-50%);
+        z-index: 1000; display: flex; flex-direction: column;
+      }
+      .share-rail a, .share-rail button {
+        width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+        color: #fff; font-size: 13px; font-weight: bold; text-decoration: none;
+        border: 0; cursor: pointer; font-family: inherit; padding: 0;
+      }
+      .share-x { background: #000000; }
+      .share-wa { background: #25d366; }
+      .share-reddit { background: #ff4500; }
+      .share-msg { background: #0084ff; }
+      .share-tg { background: #229ed9; }
+      .share-more { background: #7f8c8d; }
+      .share-strip a:hover, .share-strip button:hover,
+      .share-rail a:hover, .share-rail button:hover { opacity: .85; }
+      @media (max-width: 1400px) { .share-rail { display: none; } }
+      @media (max-width: 640px) {
+        .share-strip a, .share-strip button { font-size: 11px; }
+      }
 
       @media (max-width: 640px) {
         .logo { font-size: 25px; }
@@ -240,6 +312,26 @@
         </div>
       </div>
     </footer>
+
+    <!-- Fixed bottom share strip: 6 coloured segments sharing the current page -->
+    <nav class="share-strip" aria-label="Share this page">
+      <a class="share-x" data-share="x" href="#" target="_blank" rel="noopener" aria-label="Share on X">X</a>
+      <a class="share-wa" data-share="wa" href="#" target="_blank" rel="noopener" aria-label="Share on WhatsApp">WhatsApp</a>
+      <a class="share-reddit" data-share="reddit" href="#" target="_blank" rel="noopener" aria-label="Share on Reddit">Reddit</a>
+      <a class="share-msg" data-share="msg" href="#" target="_blank" rel="noopener" aria-label="Share on Messenger">Messenger</a>
+      <a class="share-tg" data-share="tg" href="#" target="_blank" rel="noopener" aria-label="Share on Telegram">Telegram</a>
+      <button class="share-more" data-share="more" type="button" aria-label="Share this page">Share</button>
+    </nav>
+
+    <!-- Left floating share rail: same 6 share links, hidden on narrower screens -->
+    <aside class="share-rail" aria-label="Share this page">
+      <a class="share-x" data-share="x" href="#" target="_blank" rel="noopener" aria-label="Share on X" title="X">X</a>
+      <a class="share-wa" data-share="wa" href="#" target="_blank" rel="noopener" aria-label="Share on WhatsApp" title="WhatsApp">W</a>
+      <a class="share-reddit" data-share="reddit" href="#" target="_blank" rel="noopener" aria-label="Share on Reddit" title="Reddit">R</a>
+      <a class="share-msg" data-share="msg" href="#" target="_blank" rel="noopener" aria-label="Share on Messenger" title="Messenger">M</a>
+      <a class="share-tg" data-share="tg" href="#" target="_blank" rel="noopener" aria-label="Share on Telegram" title="Telegram">T</a>
+      <button class="share-more" data-share="more" type="button" aria-label="Share this page" title="Share">&#8599;</button>
+    </aside>
 
     <script src="assets/app.js"></script>
   </body>
