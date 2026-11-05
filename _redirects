@@ -5,6 +5,7 @@
 # unknown paths; these rewrites keep the same behaviour for
 # direct visits to clean URLs).
 /video/*  /index.html  200
+/*/*.html /index.html  200
 /tags/*   /index.html  200
 /page/*   /index.html  200
 /search   /index.html  200
