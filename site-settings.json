@@ -13,7 +13,7 @@
       "code": ""
     },
     "videoTop": {
-      "enabled": true,
+      "enabled": false,
       "code": ""
     },
     "videoMidRect1": {
@@ -29,7 +29,7 @@
       "code": ""
     },
     "videoBottomRect": {
-      "enabled": true,
+      "enabled": false,
       "code": ""
     },
     "videoBottomWide": {
