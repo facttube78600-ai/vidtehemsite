@@ -10,10 +10,16 @@
    Clean URLs via the History API:
      /                              homepage
      /page/02.html                  homepage, page 2
-     /video/<slug>-<id>.html        video page
+     /<category>/<slug>-<id>.html   video page (category drives the URL)
+     /video/<slug>-<id>.html        legacy video URL (server redirects)
      /tags/<slug>.html              tag page (?p=2 for page 2)
      /search?q=<query>              search results (?p=2 ...)
      /terms, /privacy, /contact, /dmca
+   Site settings (site meta, header code, ads, brand row) live in
+   site-settings.json, fetched the same way as videos.json, so a
+   dashboard change appears without a redeploy. Header code is
+   injected into <head> on every page (server-side by the Pages
+   Function, with this file as a fallback for SPA loads).
    The Pages Function functions/[[path]].js serves index.html for
    these paths, so a direct visit / refresh works too. */
 (function () {
@@ -21,6 +27,8 @@
 
   var GITHUB_RAW_URL =
     "https://raw.githubusercontent.com/facttube78600-ai/vidtehemsite/main/videos.json";
+  var SETTINGS_RAW_URL =
+    "https://raw.githubusercontent.com/facttube78600-ai/vidtehemsite/main/site-settings.json";
   var PER_PAGE = 48;
 
   var TAGS = [
@@ -58,7 +66,10 @@
     return null;
   }
 
-  function videoUrl(v) { return "/video/" + v.slug + "-" + v.id + ".html"; }
+  function categorySlug(v) {
+    return slugify(v.category || (v.tags && v.tags[0]) || "video");
+  }
+  function videoUrl(v) { return "/" + categorySlug(v) + "/" + v.slug + "-" + v.id + ".html"; }
   function tagUrl(tag) { return "/tags/" + tagSlug(tag) + ".html"; }
 
   /* ---------- Professional meta tags (per route) ----------
@@ -72,6 +83,71 @@
   var HOME_DESC = "VidTheme — browse free videos by category. Nature, Travel, Food, Ocean Life, Mountains, City Life, Winter and Sky videos, all in one place.";
   var HOME_KEYWORDS = "vidtheme, nature videos, travel videos, food videos, ocean life videos, mountain videos, city life videos, winter videos, sky videos, free videos";
   var HOME_OG_IMAGE = SITE_URL + "/assets/og-image.svg";
+
+  /* ---------- Site settings (site-settings.json) ----------
+     Same fetch pattern as videos.json: GitHub raw first (fresh
+     after a dashboard save), local copy as fallback. Settings
+     never block the page: a failed load keeps the built-in
+     defaults above. */
+  var SETTINGS = null;
+  function loadSettings() {
+    var bust = "?v=" + Date.now();
+    return fetch(SETTINGS_RAW_URL + bust, { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw new Error("settings raw " + r.status); return r.json(); })
+      .catch(function () {
+        return fetch("/site-settings.json" + bust, { cache: "no-store" }).then(function (r) {
+          if (!r.ok) throw new Error("local settings " + r.status);
+          return r.json();
+        });
+      })
+      .then(function (s) { SETTINGS = s || null; })
+      .catch(function () { SETTINGS = null; });
+  }
+  function applySettings() {
+    if (!SETTINGS) return;
+    if (SETTINGS.siteTitle) HOME_TITLE = SETTINGS.siteTitle;
+    if (SETTINGS.siteDescription) HOME_DESC = SETTINGS.siteDescription;
+    if (SETTINGS.siteKeywords) HOME_KEYWORDS = SETTINGS.siteKeywords;
+    if (SETTINGS.ogImage) HOME_OG_IMAGE = absUrl(SETTINGS.ogImage);
+    renderBrands();
+    applyHeaderCode();
+  }
+  /* Inject an HTML/JS snippet (header code, ad code) through real
+     DOM nodes so <script> tags actually execute. Scripts set
+     through innerHTML never run, and scripts parsed by innerHTML
+     do not reliably run when moved afterwards — so each <script>
+     is re-created with createElement (attributes + text copied)
+     and appended; other nodes are appended as-is. */
+  function injectCodeInto(el, code) {
+    var tmp = document.createElement("div");
+    tmp.innerHTML = code;
+    var nodes = [];
+    while (tmp.firstChild) nodes.push(tmp.removeChild(tmp.firstChild));
+    nodes.forEach(function (n) {
+      if (n.tagName && n.tagName.toLowerCase() === "script") {
+        var s = document.createElement("script");
+        for (var i = 0; i < n.attributes.length; i++) {
+          var at = n.attributes[i];
+          s.setAttribute(at.name, at.value);
+        }
+        s.text = n.textContent;
+        el.appendChild(s);
+      } else {
+        el.appendChild(n);
+      }
+    });
+  }
+  /* Header code (Analytics, Search Console, …) is injected into
+     <head> on every page. The Pages Function normally injects it
+     server-side with vt-header-code markers; this is the fallback
+     for loads where it is missing. */
+  function applyHeaderCode() {
+    if (!SETTINGS || !SETTINGS.headerCode) return;
+    if (document.head.innerHTML.indexOf("vt-header-code-start") !== -1) return;
+    document.head.appendChild(document.createComment(" vt-header-code-start "));
+    injectCodeInto(document.head, SETTINGS.headerCode);
+    document.head.appendChild(document.createComment(" vt-header-code-end "));
+  }
 
   function absUrl(u) {
     if (!u) return "";
@@ -159,7 +235,7 @@
       thumb: v.thumbnail || v.thumb || "",
       embed_url: v.embed_url || "",
       tags: tags,
-      tag: tags[0] || "",
+      tag: v.category || tags[0] || "",
       category: v.category || tags[0] || "",
       date: v.date || "",
       status: v.status === "draft" ? "draft" : "published",
@@ -206,16 +282,32 @@
       });
   }
 
-  /* Channels row — COLOURED TEXT BUTTONS (not images), one per tag:
-     90x40, white bold uppercase centred text. Colours sampled from
-     the user's button screenshot. */
-  brandRow.innerHTML = TAGS.map(function (t) {
-    return (
-      '<div class="chan"><a class="brand-' + tagSlug(t) + '" href="' + tagUrl(t) + '" data-tag="' + esc(t) + '" aria-label="' + esc(t) + '" title="' + esc(t) + '">' +
-      esc(t.toUpperCase()) +
-      "</a></div>"
-    );
-  }).join("");
+  /* Channels row — one slot per category, managed in the admin
+     dashboard (Site > Brand Row). A slot shows its image when one
+     is set, otherwise the coloured text button (90x40, white bold
+     uppercase). The link is configurable per slot. */
+  var BRAND_COLORS = { Nature: "#24975c", Travel: "#3277d6", Food: "#d36e2e", "Ocean Life": "#1f9aa6", Mountains: "#6c5ca1", "City Life": "#3c4451", Winter: "#5e93b5", Sky: "#a13c8e" };
+  function defaultBrands() {
+    return TAGS.map(function (t) {
+      return { label: t, color: BRAND_COLORS[t] || "#3c4451", image: "", link: tagUrl(t), enabled: true };
+    });
+  }
+  function renderBrands() {
+    var brands = (SETTINGS && Array.isArray(SETTINGS.brands) && SETTINGS.brands.length) ? SETTINGS.brands : defaultBrands();
+    brandRow.innerHTML = brands.filter(function (b) { return b.enabled !== false; }).map(function (b) {
+      var slug = tagSlug(b.label || "");
+      var inner = b.image
+        ? '<img src="' + esc(absUrl(b.image)) + '" width="90" height="40" alt="' + esc(b.label) + '" />'
+        : esc(String(b.label || "").toUpperCase());
+      var cls = b.image ? "" : ' class="brand-' + slug + '"';
+      return (
+        '<div class="chan"><a' + cls + ' href="' + esc(b.link || tagUrl(b.label)) + '" data-tag="' + esc(b.label) + '" aria-label="' + esc(b.label) + '" title="' + esc(b.label) + '">' +
+        inner +
+        "</a></div>"
+      );
+    }).join("");
+  }
+  renderBrands();
 
   function markActiveTag(tag) {
     var links = brandRow.querySelectorAll("a");
@@ -224,9 +316,34 @@
     }
   }
 
-  /* ---------- Ad slots (empty placeholder containers) ---------- */
-  function adWide() { return '<div class="ad-slot wide" role="complementary" aria-label="Advertisement slot">Advertisement</div>'; }
-  function adRect() { return '<div class="ad-slot rect" role="complementary" aria-label="Advertisement slot">Advertisement</div>'; }
+  /* ---------- Ad slots (dashboard-managed) ----------
+     Each placement is ON/OFF with pasted code in the admin (Site >
+     Ads). OFF hides the slot entirely. ON with code renders the
+     code; ON without code shows the placeholder. Ad code is
+     activated through real DOM nodes after each render, because
+     scripts set through innerHTML never execute. */
+  var adSlotSeq = 0;
+  var adRegistry = {};
+  function adSlot(key, cls) {
+    var a = SETTINGS && SETTINGS.ads ? SETTINGS.ads[key] : null;
+    if (!a || !a.enabled) return "";
+    if (!a.code) return '<div class="ad-slot ' + cls + '" role="complementary" aria-label="Advertisement slot">Advertisement</div>';
+    var id = key + "-" + (++adSlotSeq);
+    adRegistry[id] = a.code;
+    return '<div class="ad-slot ' + cls + '" role="complementary" aria-label="Advertisement slot" data-adslot="' + id + '"></div>';
+  }
+  function adWide(key) { return adSlot(key, "wide"); }
+  function adRect(key) { return adSlot(key, "rect"); }
+  function activateAds() {
+    var slots = document.querySelectorAll("[data-adslot]");
+    for (var i = 0; i < slots.length; i++) {
+      var el = slots[i];
+      var code = adRegistry[el.getAttribute("data-adslot")];
+      if (!code) continue;
+      injectCodeInto(el, code);
+      el.removeAttribute("data-adslot");
+    }
+  }
 
   /* ---------- Lazy-load for thumb images (reference behaviour) ----------
      Before loading, an img has the placeholder src + data-lazy-src with
@@ -270,7 +387,7 @@
 
   /* ---------- Cards & pagination (reference structure) ----------
      Card: <li class="thumb"><div class="thumb_wrap">
-       <a class="thumb_link" href="/video/<slug>-<id>.html">
+       <a class="thumb_link" href="/<category>/<slug>-<id>.html">
          <div class="thumb_img"><img class="img_prev" ...>
          <div class="timer">mm:ss</div></div></a>
        <div class="thumb_title">title</div></div></li>
@@ -369,12 +486,12 @@
     if (!list.length) return '<p class="empty-note">No videos found.</p>';
     var cards = gridPage(list, page).map(cardHtml).join("");
     return (
-      adWide() +
+      adWide("homeTop") +
       paginationHtml(page, totalPages(list), hrefFor) +
       '<div class="thumbs"><ul>' + cards + "</ul></div>" +
       paginationHtml(page, totalPages(list), hrefFor) +
-      adRect() +
-      adWide()
+      adRect("homeBottomRect") +
+      adWide("homeBottomWide")
     );
   }
 
@@ -531,15 +648,15 @@
       '<a href="' + tagUrl(video.tag || TAGS[0]) + '">Show more related videos</a>' +
       "</button></div>";
     app.innerHTML =
-      adWide() +
+      adWide("videoTop") +
       toptitle(video.title, false) +
       playerHtml +
       '<div class="tags">' + tagLinks + "</div>" +
-      adRect() + adWide() + adRect() +
+      adRect("videoMidRect1") + adWide("videoMidWide") + adRect("videoMidRect2") +
       '<div class="related"><div>Related Videos</div></div>' +
       '<div class="thumbs"><ul>' + relatedCards + "</ul></div>" +
       showMoreHtml +
-      adRect() + adWide();
+      adRect("videoBottomRect") + adWide("videoBottomWide");
     observeLazyImages();
   }
 
@@ -656,7 +773,12 @@
     var m;
 
     if ((m = path.match(/^\/video\/.+-(\d+)\.html$/))) {
+      /* Legacy video URL — the server 301s these to the category
+         URL; this branch only runs if a legacy URL is reached
+         without the server (e.g. in-page navigation). */
       videoView(parseInt(m[1], 10));
+    } else if ((m = path.match(/^\/([a-z0-9-]+)\/(.+)-(\d+)\.html$/)) && findTag(m[1])) {
+      videoView(parseInt(m[3], 10));
     } else if ((m = path.match(/^\/tags\/([a-z0-9-]+)\.html$/))) {
       var tag = findTag(m[1]);
       if (tag) tagView(tag, parseInt(qs.p || "1", 10)); else homeView(1);
@@ -670,6 +792,7 @@
       homeView(1);
     }
     updateShareLinks(); /* share strip follows SPA navigation */
+    activateAds(); /* pasted ad code runs through real DOM nodes */
     window.scrollTo(0, 0);
   }
 
@@ -699,8 +822,8 @@
 
   function boot() {
     app.innerHTML = '<p class="empty-note">Loading videos…</p>';
-    loadVideos()
-      .then(function () { route(); })
+    Promise.all([loadVideos(), loadSettings()])
+      .then(function () { applySettings(); route(); })
       .catch(function () {
         app.innerHTML =
           '<p class="empty-note">Videos could not be loaded. Please try again later.</p>' +
