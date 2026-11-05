@@ -280,7 +280,7 @@
       '<li class="thumb"><div class="thumb_wrap">' +
         '<a href="' + videoUrl(v) + '" class="thumb_link" title="' + esc(v.title) + '">' +
           '<div class="thumb_img">' +
-            '<img class="img_prev" src="' + PLACEHOLDER_SRC + '" alt="' + esc(v.title) + '" width="100%" height="auto" data-lazy-src="' + esc(v.thumb) + '" />' +
+            '<img class="img_prev" src="' + PLACEHOLDER_SRC + '" alt="' + esc(v.title) + '" width="100%" height="auto" data-lazy-src="' + esc(absUrl(v.thumb)) + '" />' +
             '<div class="timer">' + esc(v.duration) + "</div>" +
           "</div>" +
         "</a>" +
