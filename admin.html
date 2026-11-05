@@ -119,6 +119,17 @@
   .gate-btn { width:100%; padding:13px; font-size:16px; margin:2px 0 20px; }
   .gate-feats { display:flex; justify-content:center; gap:18px; padding-top:16px; border-top:1px solid #e2e8f0; font-size:12px; color:#64748b; font-weight:600; }
   .gate-foot { font-size:12px; color:#94a3b8; margin:12px 0 0; }
+  /* ---------- Image upload + tag/keyword suggestions ---------- */
+  .img-row { display:flex; gap:8px; align-items:center; }
+  .img-row input { flex:1; margin:0; }
+  .img-row .btn { white-space:nowrap; }
+  .up-msg { font-size:12px; color:#64748b; margin:6px 0 0; min-height:14px; }
+  .up-msg.err { color:#b91c1c; }
+  .sugg-wrap { position:relative; }
+  .sugg-box { position:absolute; left:0; right:0; top:100%; z-index:30; background:#fff; border:1px solid #cbd5e1; border-radius:8px; box-shadow:0 10px 30px rgba(2,6,23,.25); margin-top:4px; max-height:200px; overflow:auto; display:none; }
+  .sugg-box.open { display:block; }
+  .sugg-item { padding:9px 12px; cursor:pointer; font-size:14px; color:#0f172a; }
+  .sugg-item.sel, .sugg-item:hover { background:#f1f5f9; }
   @media (max-width:900px){ .ed{flex-direction:column} .ed .right{width:100%} }
   @media (max-width:768px){
     .wrap{flex-direction:column}
@@ -237,8 +248,8 @@
               <input type="url" id="fEmbed" placeholder="https://…/embed/…" />
               <div class="row">
                 <div>
-                  <label for="fDuration">Duration (mm:ss)</label>
-                  <input type="text" id="fDuration" placeholder="12:34" />
+                  <label for="fDuration">Duration (mm:ss or hh:mm:ss)</label>
+                  <input type="text" id="fDuration" placeholder="12:34 or 1:05:30" />
                 </div>
                 <div>
                   <label for="fDate">Date</label>
@@ -246,13 +257,16 @@
                 </div>
               </div>
               <label for="fKw">Meta Keywords (comma separated)</label>
-              <input type="text" id="fKw" placeholder="e.g. waterfalls, rainforest, nature" />
+              <div class="sugg-wrap"><input type="text" id="fKw" placeholder="e.g. waterfalls, rainforest, nature" autocomplete="off" /><div class="sugg-box" id="fKwSugg"></div></div>
               <label for="fTagsInput">Tags (comma separated)</label>
-              <input type="text" id="fTagsInput" placeholder="e.g. waterfall, rainforest, river" />
+              <div class="sugg-wrap"><input type="text" id="fTagsInput" placeholder="e.g. waterfall, rainforest, river" autocomplete="off" /><div class="sugg-box" id="fTagsSugg"></div></div>
               <label for="fCategory">Main Category (drives the video URL)</label>
               <select id="fCategory"></select>
               <label for="fThumb">Thumbnail URL (16:9 — local assets/thumbs/… or https://…)</label>
-              <input type="text" id="fThumb" placeholder="assets/thumbs/waterfall.svg" />
+              <div class="img-row"><input type="text" id="fThumb" placeholder="assets/thumbs/waterfall.svg" /><button class="btn" id="thumbUploadBtn" type="button">⬆ Upload</button><input type="file" id="thumbFile" accept="image/*" style="display:none" /></div>
+              <p class="up-msg" id="thumbUpMsg"></p>
+              <label for="fThumbAlt">Thumbnail Alt Text — image SEO</label>
+              <input type="text" id="fThumbAlt" maxlength="200" placeholder="e.g. Hidden waterfall in a green rainforest" />
               <div id="previewBox">
                 <label>Live preview</label>
                 <div class="preview" id="preview"></div>
@@ -266,7 +280,10 @@
               <label for="fOgDesc">OG Description</label>
               <textarea id="fOgDesc" rows="2" maxlength="300" placeholder="Defaults to the meta description"></textarea>
               <label for="fOgImg">OG Image URL</label>
-              <input type="text" id="fOgImg" placeholder="Defaults to the thumbnail — assets/thumbs/… or https://…" />
+              <div class="img-row"><input type="text" id="fOgImg" placeholder="Defaults to the thumbnail — assets/thumbs/… or https://…" /><button class="btn" id="ogUploadBtn" type="button">⬆ Upload</button><input type="file" id="ogFile" accept="image/*" style="display:none" /></div>
+              <p class="up-msg" id="ogUpMsg"></p>
+              <label for="fOgImgAlt">OG Image Alt Text — image SEO</label>
+              <input type="text" id="fOgImgAlt" maxlength="200" placeholder="e.g. Hidden waterfall in a green rainforest" />
               <label for="fTwCard">Twitter Card</label>
               <select id="fTwCard"><option value="summary_large_image">Large image</option><option value="summary">Summary (small image)</option></select>
             </div>
@@ -334,7 +351,10 @@
           <label for="smKeywords">Site Keywords</label>
           <input type="text" id="smKeywords" />
           <label for="smOgImage">OG Image URL</label>
-          <input type="text" id="smOgImage" placeholder="https://vidtehemsite.pages.dev/assets/og-image.svg" />
+          <div class="img-row"><input type="text" id="smOgImage" placeholder="https://vidtehemsite.pages.dev/assets/og-image.svg" /><button class="btn" id="smOgUploadBtn" type="button">⬆ Upload</button><input type="file" id="smOgFile" accept="image/*" style="display:none" /></div>
+          <p class="up-msg" id="smOgUpMsg"></p>
+          <label for="smOgImageAlt">OG Image Alt Text — image SEO</label>
+          <input type="text" id="smOgImageAlt" maxlength="200" placeholder="e.g. Free nature videos on VidTheme" />
           <img id="smOgPrev" alt="" style="max-width:300px;margin-top:10px;border-radius:8px;display:none" />
           <label for="smTwCard">Twitter Card</label>
           <select id="smTwCard"><option value="summary_large_image">Large image</option><option value="summary">Summary (small image)</option></select>
@@ -508,17 +528,18 @@
       siteDescription: "VidTheme — browse free videos by category. Nature, Travel, Food, Ocean Life, Mountains, City Life, Winter and Sky videos, all in one place.",
       siteKeywords: "vidtheme, nature videos, travel videos, food videos, ocean life videos, mountain videos, city life videos, winter videos, sky videos, free videos",
       ogImage: "https://vidtehemsite.pages.dev/assets/og-image.svg",
+      ogImageAlt: "",
       twitterCard: "summary_large_image",
       headerCode: "",
       ads: ads,
-      brands: BRAND_DEFAULTS.map(function (b) { return { label: b.label, color: b.color, image: "", link: b.link, enabled: true }; })
+      brands: BRAND_DEFAULTS.map(function (b) { return { label: b.label, color: b.color, image: "", alt: "", link: b.link, enabled: true }; })
     };
   }
   var settings = defaultSettings();
   function mergeSettings(data) {
     var d = defaultSettings();
     if (!data || typeof data !== "object") return d;
-    ["siteTitle", "siteDescription", "siteKeywords", "ogImage", "twitterCard", "headerCode"].forEach(function (k) {
+    ["siteTitle", "siteDescription", "siteKeywords", "ogImage", "ogImageAlt", "twitterCard", "headerCode"].forEach(function (k) {
       if (typeof data[k] === "string") d[k] = data[k];
     });
     if (data.ads && typeof data.ads === "object") {
@@ -535,6 +556,7 @@
           label: typeof s.label === "string" && s.label ? s.label : b.label,
           color: typeof s.color === "string" && s.color ? s.color : b.color,
           image: typeof s.image === "string" ? s.image : "",
+          alt: typeof s.alt === "string" ? s.alt : "",
           link: typeof s.link === "string" && s.link ? s.link : b.link,
           enabled: s.enabled !== false
         };
@@ -769,6 +791,7 @@
       title: title,
       duration: $("fDuration").value.trim(),
       thumbnail: $("fThumb").value.trim(),
+      thumb_alt: $("fThumbAlt").value.trim(),
       embed_url: $("fEmbed").value.trim(),
       tags: parseTagsInput(),
       category: $("fCategory").value,
@@ -781,6 +804,7 @@
       og_title: $("fOgTitle").value.trim(),
       og_description: $("fOgDesc").value.trim(),
       og_image: $("fOgImg").value.trim(),
+      og_image_alt: $("fOgImgAlt").value.trim(),
       twitter_card: $("fTwCard").value,
       canonical: $("fCanon").value.trim()
     };
@@ -838,7 +862,7 @@
   function refreshForm() { updatePreview(); updateSeo(); scheduleAutosave(); }
 
   ["fTitle", "fDuration", "fThumb", "fEmbed"].forEach(function (id) { $(id).addEventListener("input", refreshForm); });
-  ["fSeo", "fMeta", "fKw", "fFocus", "fSlug", "fDate", "fOgTitle", "fOgDesc", "fOgImg", "fCanon", "fTagsInput"].forEach(function (id) { $(id).addEventListener("input", refreshForm); });
+  ["fSeo", "fMeta", "fKw", "fFocus", "fSlug", "fDate", "fOgTitle", "fOgDesc", "fOgImg", "fOgImgAlt", "fThumbAlt", "fCanon", "fTagsInput"].forEach(function (id) { $(id).addEventListener("input", refreshForm); });
   $("fTwCard").addEventListener("change", refreshForm);
   $("fCategory").addEventListener("change", refreshForm);
   $("fTitle").addEventListener("input", function () {
@@ -889,6 +913,7 @@
     $("fDuration").value = d.duration || "";
     $("fSlug").value = d.slug || "";
     $("fThumb").value = d.thumbnail || d.thumb || "";
+    $("fThumbAlt").value = d.thumb_alt || "";
     $("fEmbed").value = d.embed_url || "";
     $("fDate").value = d.date || today();
     $("fSeo").value = d.seo_title || "";
@@ -898,6 +923,7 @@
     $("fOgTitle").value = d.og_title || "";
     $("fOgDesc").value = d.og_description || "";
     $("fOgImg").value = d.og_image || "";
+    $("fOgImgAlt").value = d.og_image_alt || "";
     $("fTwCard").value = d.twitter_card === "summary" ? "summary" : "summary_large_image";
     $("fCanon").value = d.canonical || "";
     $("fTagsInput").value = Array.isArray(d.tags) ? d.tags.join(", ") : (d.tags || "");
@@ -927,7 +953,7 @@
   function clearForm() {
     editingId = null;
     $("formTitle").textContent = "Add New Video";
-    ["fTitle", "fDuration", "fSlug", "fThumb", "fEmbed", "fSeo", "fMeta", "fKw", "fFocus", "fOgTitle", "fOgDesc", "fOgImg", "fCanon", "fTagsInput"].forEach(function (id) { $(id).value = ""; });
+    ["fTitle", "fDuration", "fSlug", "fThumb", "fThumbAlt", "fEmbed", "fSeo", "fMeta", "fKw", "fFocus", "fOgTitle", "fOgDesc", "fOgImg", "fOgImgAlt", "fCanon", "fTagsInput"].forEach(function (id) { $(id).value = ""; });
     $("fTwCard").value = "summary_large_image";
     $("fDate").value = today();
     $("fCategory").value = TAGS[0];
@@ -947,6 +973,7 @@
     $("fDuration").value = v.duration || "";
     $("fSlug").value = v.slug || "";
     $("fThumb").value = v.thumbnail || v.thumb || "";
+    $("fThumbAlt").value = v.thumb_alt || "";
     $("fEmbed").value = v.embed_url || "";
     $("fDate").value = v.date || today();
     $("fSeo").value = v.seo_title || "";
@@ -956,6 +983,7 @@
     $("fOgTitle").value = v.og_title || "";
     $("fOgDesc").value = v.og_description || "";
     $("fOgImg").value = v.og_image || "";
+    $("fOgImgAlt").value = v.og_image_alt || "";
     $("fTwCard").value = v.twitter_card === "summary" ? "summary" : "summary_large_image";
     $("fCanon").value = v.canonical || "";
     $("fSlugAuto").checked = false;
@@ -1126,6 +1154,7 @@
     $("smDesc").value = settings.siteDescription || "";
     $("smKeywords").value = settings.siteKeywords || "";
     $("smOgImage").value = settings.ogImage || "";
+    $("smOgImageAlt").value = settings.ogImageAlt || "";
     $("smTwCard").value = settings.twitterCard === "summary" ? "summary" : "summary_large_image";
     var prev = $("smOgPrev");
     if (settings.ogImage) { prev.src = settings.ogImage; prev.style.display = ""; } else { prev.style.display = "none"; }
@@ -1135,6 +1164,7 @@
     settings.siteDescription = $("smDesc").value.trim();
     settings.siteKeywords = $("smKeywords").value.trim();
     settings.ogImage = $("smOgImage").value.trim();
+    settings.ogImageAlt = $("smOgImageAlt").value.trim();
     settings.twitterCard = $("smTwCard").value;
     saveSettings($("smMsg")).then(function (ok) { if (ok) settingsDirty.sitemeta = false; });
   });
@@ -1142,6 +1172,144 @@
     var prev = $("smOgPrev");
     if (this.value) { prev.src = this.value; prev.style.display = ""; } else { prev.style.display = "none"; }
   });
+
+  /* ---------------- Tag / keyword suggestions ----------------
+     Suggestions come from the library itself: every tag and meta
+     keyword already used in a video, plus the 8 categories. As
+     soon as the first word is typed, matching entries appear
+     under the field; click (or arrow keys + Enter) to insert. */
+  var SUGGESTIONS = [];
+  function rebuildSuggestIndex() {
+    var seen = {};
+    var out = [];
+    function add(s) {
+      var t = String(s || "").trim();
+      if (!t || seen[t.toLowerCase()]) return;
+      seen[t.toLowerCase()] = true;
+      out.push(t);
+    }
+    TAGS.forEach(add);
+    videos.forEach(function (v) {
+      (v.tags || []).forEach(add);
+      String(v.meta_keywords || "").split(",").forEach(add);
+      if (v.category) add(v.category);
+    });
+    SUGGESTIONS = out.sort(function (a, b) { return a.toLowerCase().localeCompare(b.toLowerCase()); });
+  }
+  function attachSuggest(input, box) {
+    var sel = -1, items = [];
+    function close() { box.classList.remove("open"); box.innerHTML = ""; sel = -1; items = []; }
+    function currentSeg() {
+      var v = input.value;
+      var idx = v.lastIndexOf(",");
+      return { before: idx >= 0 ? v.slice(0, idx + 1) + " " : "", seg: v.slice(idx + 1).trim() };
+    }
+    function pick(choice) {
+      var c = currentSeg();
+      input.value = c.before + choice + ", ";
+      input.focus();
+      close();
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    input.addEventListener("input", function () {
+      var seg = currentSeg().seg.toLowerCase();
+      if (!seg) { close(); return; }
+      var starts = SUGGESTIONS.filter(function (s) { return s.toLowerCase().indexOf(seg) === 0; });
+      var contains = SUGGESTIONS.filter(function (s) { return s.toLowerCase().indexOf(seg) > 0; });
+      items = starts.concat(contains).slice(0, 8);
+      if (!items.length) { close(); return; }
+      sel = 0;
+      box.innerHTML = items.map(function (s, i) {
+        return '<div class="sugg-item' + (i === 0 ? " sel" : "") + '" data-i="' + i + '">' + esc(s) + "</div>";
+      }).join("");
+      box.classList.add("open");
+    });
+    input.addEventListener("keydown", function (e) {
+      if (!box.classList.contains("open")) return;
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault();
+        sel = e.key === "ArrowDown" ? Math.min(sel + 1, items.length - 1) : Math.max(sel - 1, 0);
+        box.querySelectorAll(".sugg-item").forEach(function (el, i) { el.classList.toggle("sel", i === sel); });
+      } else if (e.key === "Enter" && sel >= 0 && items[sel]) {
+        e.preventDefault();
+        pick(items[sel]);
+      } else if (e.key === "Escape") {
+        close();
+      }
+    });
+    box.addEventListener("mousedown", function (e) {
+      var t = e.target.closest ? e.target.closest(".sugg-item") : null;
+      if (t) { e.preventDefault(); pick(items[+t.getAttribute("data-i")]); }
+    });
+    input.addEventListener("blur", function () { setTimeout(close, 150); });
+  }
+  attachSuggest($("fKw"), $("fKwSugg"));
+  attachSuggest($("fTagsInput"), $("fTagsSugg"));
+
+  /* ---------------- Image upload ----------------
+     Uploads a file to the site's library (assets/uploads/) through
+     /api/publish, then fills the image field with the returned
+     path. The file name is made SEO-friendly on the server, and
+     the Alt Text field is prefilled from it (editable). Online
+     image URLs still work — just paste one into the field. */
+  function altFromFilename(name) {
+    var base = String(name || "").split(/[\\/]/).pop().replace(/\.[^.]+$/, "");
+    return base.replace(/[^a-zA-Z0-9]+/g, " ").trim().replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+  }
+  function uploadImageFile(file, msgEl, done) {
+    if (!file) return;
+    if (!/^image\//.test(file.type || "")) {
+      if (msgEl) { msgEl.textContent = "Please choose an image file."; msgEl.classList.add("err"); }
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      if (msgEl) { msgEl.textContent = "Image is too large (max 5 MB)."; msgEl.classList.add("err"); }
+      return;
+    }
+    if (msgEl) { msgEl.textContent = "Uploading…"; msgEl.classList.remove("err"); }
+    var reader = new FileReader();
+    reader.onload = function () {
+      var dataUrl = String(reader.result || "");
+      var b64 = dataUrl.indexOf(",") >= 0 ? dataUrl.slice(dataUrl.indexOf(",") + 1) : dataUrl;
+      fetch("/api/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: password, image: { filename: file.name, data: b64 } })
+      })
+        .then(function (r) { return r.json().then(function (j) { return { status: r.status, body: j }; }); })
+        .then(function (res) {
+          if (res.status === 200 && res.body.ok) {
+            if (msgEl) msgEl.textContent = "Uploaded: " + res.body.path;
+            done(res.body.path, altFromFilename(file.name));
+          } else if (msgEl) {
+            msgEl.textContent = "Upload failed: " + (res.body.error || ("HTTP " + res.status));
+            msgEl.classList.add("err");
+          }
+        })
+        .catch(function (e) { if (msgEl) { msgEl.textContent = "Upload failed: " + e.message; msgEl.classList.add("err"); } });
+    };
+    reader.readAsDataURL(file);
+  }
+  function bindImageUpload(btnId, fileId, urlInputId, altInputId, msgId) {
+    var btn = $(btnId), file = $(fileId);
+    if (!btn || !file) return;
+    btn.addEventListener("click", function () { file.click(); });
+    file.addEventListener("change", function () {
+      var f = file.files && file.files[0];
+      if (!f) return;
+      uploadImageFile(f, $(msgId), function (path, alt) {
+        var urlEl = $(urlInputId);
+        urlEl.value = path;
+        urlEl.dispatchEvent(new Event("input", { bubbles: true }));
+        var altEl = altInputId ? $(altInputId) : null;
+        if (altEl && !altEl.value.trim() && alt) altEl.value = alt;
+        file.value = "";
+      });
+    });
+  }
+  bindImageUpload("thumbUploadBtn", "thumbFile", "fThumb", "fThumbAlt", "thumbUpMsg");
+  bindImageUpload("ogUploadBtn", "ogFile", "fOgImg", "fOgImgAlt", "ogUpMsg");
+  bindImageUpload("smOgUploadBtn", "smOgFile", "smOgImage", "smOgImageAlt", "smOgUpMsg");
 
   function renderAds() {
     $("adsList").innerHTML = ADS_PLACEMENTS.map(function (p) {
@@ -1192,8 +1360,11 @@
         '<div><label for="br-color-' + i + '">Button colour</label>' +
         '<input type="color" id="br-color-' + i + '" value="' + esc(b.color) + '" style="height:42px;padding:4px" /></div></div>' +
         '<label for="br-image-' + i + '">Image URL (empty = coloured text button)</label>' +
-        '<input type="text" id="br-image-' + i + '" value="' + esc(b.image) + '" placeholder="assets/brands/nature.png or https://…" />' +
+        '<div class="img-row"><input type="text" id="br-image-' + i + '" value="' + esc(b.image) + '" placeholder="assets/brands/nature.png or https://…" /><button class="btn" id="br-up-' + i + '" type="button">⬆ Upload</button><input type="file" id="br-file-' + i + '" accept="image/*" style="display:none" /></div>' +
+        '<p class="up-msg" id="br-upmsg-' + i + '"></p>' +
         '<img id="br-prev-' + i + '" src="' + esc(b.image) + '" alt="" style="width:90px;height:40px;object-fit:cover;margin-top:8px;border-radius:4px;background:#000;' + (b.image ? "" : "display:none") + '" />' +
+        '<label for="br-alt-' + i + '">Image Alt Text — image SEO</label>' +
+        '<input type="text" id="br-alt-' + i + '" value="' + esc(b.alt || "") + '" maxlength="100" placeholder="e.g. Nature videos" />' +
         '<label for="br-link-' + i + '">Link</label>' +
         '<select id="br-link-' + i + '">' + LINK_OPTIONS.map(function (o) {
           return '<option value="' + esc(o.value) + '"' + (o.value === selVal ? " selected" : "") + ">" + esc(o.label) + "</option>";
@@ -1210,6 +1381,7 @@
         img.src = this.value;
         img.style.display = this.value ? "" : "none";
       });
+      bindImageUpload("br-up-" + i, "br-file-" + i, "br-image-" + i, "br-alt-" + i, "br-upmsg-" + i);
       $("br-link-" + i).addEventListener("change", function () {
         $("br-custom-wrap-" + i).style.display = this.value === "custom" ? "" : "none";
       });
@@ -1222,6 +1394,7 @@
         label: $("br-label-" + i).value.trim() || b.label,
         color: $("br-color-" + i).value,
         image: $("br-image-" + i).value.trim(),
+        alt: $("br-alt-" + i).value.trim(),
         link: linkSel === "custom" ? $("br-custom-" + i).value.trim() : linkSel,
         enabled: !!$("br-on-" + i).checked
       };
@@ -1238,6 +1411,7 @@
         var list = Array.isArray(data) ? data : (data.videos || []);
         videos = list.slice().sort(function (a, b) { return a.id - b.id; });
         mergeLocalDrafts();
+        rebuildSuggestIndex();
         renderStats(); renderRecent(); renderVideos(); renderSeo(); renderMeta();
       });
   }
