@@ -7,118 +7,356 @@
 <title>VidTheme Admin</title>
 <style>
   :root { --bg:#14141a; --panel:#1e1e28; --panel2:#262633; --text:#f2f2f5; --muted:#a8a8b5;
-    --accent:#ec008c; --accent-dark:#c40074; --green:#22a06b; --red:#d64545; --border:#3a3a4a; }
+    --accent:#ec008c; --accent-dark:#c40074; --green:#22a06b; --amber:#d97706; --red:#d64545;
+    --border:#3a3a4a; --side:#0f172a; --blue:#2563eb; }
   * { box-sizing: border-box; }
   body { margin:0; background:var(--bg); color:var(--text); font-family:Arial,Helvetica,sans-serif; font-size:15px; line-height:1.45; }
-  a { color:#7db8ff; }
-  .wrap { max-width:1100px; margin:0 auto; padding:18px 14px 40px; }
-  h1 { font-size:24px; margin:4px 0 4px; }
-  h2 { font-size:18px; margin:22px 0 10px; }
+  a { color:#7db8ff; text-decoration:none; }
+  h1 { font-size:26px; margin:4px 0 18px; letter-spacing:-.02em; }
+  h2 { font-size:17px; margin:0 0 12px; }
+  h3 { font-size:15px; margin:16px 0 8px; }
   .muted { color:var(--muted); font-size:13px; }
-  .card { background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:16px; margin-top:14px; }
-  label { display:block; font-size:13px; color:var(--muted); margin:12px 0 4px; }
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:18px; margin-bottom:18px; }
+  .note { background:#2a2410; border:1px solid #8a6d1b; border-left:4px solid var(--amber); padding:14px 16px; border-radius:10px; margin-bottom:18px; font-size:14px; line-height:1.6; }
+  label { display:block; font-size:13px; color:var(--muted); margin:12px 0 4px; font-weight:600; }
   input[type=text], input[type=url], input[type=password], input[type=date], textarea, select {
-    width:100%; padding:10px 11px; border:1px solid var(--border); border-radius:6px;
+    width:100%; padding:10px 11px; border:1px solid var(--border); border-radius:8px;
     background:var(--panel2); color:var(--text); font:inherit; }
+  input:focus, textarea:focus, select:focus { outline:none; border-color:var(--blue); box-shadow:0 0 0 3px rgba(37,99,235,.25); }
   textarea { min-height:64px; resize:vertical; }
   .row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   @media (max-width:640px){ .row{ grid-template-columns:1fr; } }
-  .checks label { display:inline-block; margin:6px 10px 0 0; color:var(--text); font-size:14px; }
+  .checks label { display:inline-block; margin:6px 10px 0 0; color:var(--text); font-size:14px; font-weight:400; }
   .checks input { margin-right:5px; }
-  button { border:0; cursor:pointer; font:inherit; font-weight:bold; border-radius:6px; padding:11px 20px; }
+  button { border:0; cursor:pointer; font:inherit; font-weight:bold; border-radius:8px; padding:10px 18px; }
+  .btn { background:linear-gradient(135deg,#3b82f6,#2563eb); color:#fff; }
+  .btn:hover { filter:brightness(1.1); }
   .btn-pink { background:var(--accent); color:#fff; }
   .btn-pink:hover { background:var(--accent-dark); }
   .btn-ghost { background:transparent; color:var(--text); border:1px solid var(--border); font-weight:normal; }
-  .btn-green { background:var(--green); color:#fff; }
-  .btn-red { background:var(--red); color:#fff; padding:7px 12px; font-size:13px; }
+  .btn-green { background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff; }
+  .btn-red { background:linear-gradient(135deg,#f87171,#dc2626); color:#fff; padding:7px 12px; font-size:13px; }
   .btn-sm { padding:7px 12px; font-size:13px; }
-  .msg { margin-top:12px; padding:10px 12px; border-radius:6px; display:none; }
+  .msg { margin-top:12px; padding:10px 12px; border-radius:8px; display:none; }
   .msg.ok { display:block; background:#123d2a; color:#b8f0d2; }
   .msg.err { display:block; background:#4a1d1d; color:#ffd2d2; }
   table { width:100%; border-collapse:collapse; font-size:14px; }
-  th, td { text-align:left; padding:8px 6px; border-bottom:1px solid var(--border); vertical-align:top; }
-  th { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.5px; }
+  th { font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); text-align:left; padding:10px; border-bottom:2px solid var(--border); }
+  td { text-align:left; padding:12px 10px; border-bottom:1px solid #2c2c3a; vertical-align:top; }
+  tr:hover td { background:#23232f; }
   .thumb-mini { width:96px; height:54px; object-fit:cover; border-radius:4px; background:#000; }
-  /* Live preview uses the public card style */
   .preview { max-width:300px; margin-top:10px; background:#fff; color:#1a1a1a; border:1px solid #d4d4d4; }
   .preview .thumb { display:block; position:relative; aspect-ratio:16/9; overflow:hidden; background:#111; }
   .preview .thumb img { width:100%; height:100%; object-fit:cover; }
   .preview .duration { position:absolute; right:5px; bottom:5px; background:rgba(0,0,0,.75); color:#fff; font-size:12px; font-weight:bold; padding:1px 6px; border-radius:2px; }
   .preview .strip { display:block; background:#82b5b3; color:#222426; font-weight:bold; font-size:14px; padding:7px 9px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  #gate { max-width:420px; margin:12vh auto 0; }
   .hidden { display:none !important; }
+  /* ---------- Topbar ---------- */
+  .topbar { background:linear-gradient(90deg,#0f172a,#1e3a8a); color:#fff; display:flex; gap:14px; align-items:center; padding:12px 20px; position:sticky; top:0; z-index:50; box-shadow:0 2px 14px rgba(0,0,0,.4); }
+  .topbar b.logo { font-size:18px; display:flex; align-items:center; gap:10px; white-space:nowrap; }
+  .topbar b.logo::before { content:'🎬'; display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:10px; background:linear-gradient(135deg,#ec008c,#ad1457); font-size:17px; }
+  .topbar .ptitle { font-size:16px; font-weight:600; color:#dbeafe; }
+  .topbar a.tlink { color:#dbeafe; background:rgba(255,255,255,.12); padding:7px 13px; border-radius:999px; font-size:13px; font-weight:600; white-space:nowrap; }
+  .topbar a.tlink:hover { background:rgba(255,255,255,.24); }
+  .topbar .sp { flex:1; }
+  .count-pill { background:rgba(255,255,255,.14); border-radius:999px; padding:6px 12px; font-size:13px; font-weight:600; white-space:nowrap; }
+  .hamb { display:none; background:rgba(255,255,255,.12); color:#fff; padding:8px 12px; }
+  /* ---------- Sidebar + layout (WordPress style) ---------- */
+  .wrap { display:flex; min-height:calc(100vh - 58px); }
+  .side { width:230px; background:var(--side); color:#94a3b8; padding:14px 10px; flex-shrink:0; position:sticky; top:58px; height:calc(100vh - 58px); overflow-y:auto; display:flex; flex-direction:column; }
+  .side button { display:flex; align-items:center; gap:10px; width:100%; text-align:left; background:none; border:none; color:#cbd5e1; padding:11px 14px; font-size:15px; cursor:pointer; border-radius:9px; margin-bottom:2px; }
+  .side button:hover { background:#1e293b; color:#fff; }
+  .side button.on { background:linear-gradient(90deg,#2563eb,#3b82f6); color:#fff; box-shadow:0 4px 14px rgba(37,99,235,.45); }
+  .side button.sub { padding-left:34px; font-size:14px; }
+  .side .h { padding:16px 14px 7px; color:#64748b; font-size:11px; text-transform:uppercase; letter-spacing:.12em; font-weight:700; }
+  .side .foot { margin-top:auto; padding:14px; font-size:13px; color:#64748b; border-top:1px solid #1e293b; }
+  .main { flex:1; padding:26px; max-width:1180px; min-width:0; }
+  .view { display:none; }
+  .view.on { display:block; animation:fade .25s ease; }
+  @keyframes fade { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:none; } }
+  /* ---------- Dashboard widgets ---------- */
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:16px; margin-bottom:18px; }
+  .stat { font-size:34px; font-weight:800; line-height:1.1; }
+  .stat-card { position:relative; overflow:hidden; }
+  .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; background:var(--sc,#2563eb); }
+  .stat-card .ico { font-size:22px; margin-bottom:6px; }
+  .tag { display:inline-block; border-radius:999px; padding:3px 10px; font-size:12px; font-weight:700; background:#e2e8f0; color:#334155; }
+  .tag.pub { background:#dcfce7; color:#166534; }
+  .tag.drf { background:#fef3c7; color:#92400e; }
+  .tag.local { background:#e0e7ff; color:#3730a3; }
+  .bar { height:12px; background:#2c2c3a; border-radius:999px; overflow:hidden; }
+  .bar i { display:block; height:100%; background:linear-gradient(90deg,#22c55e,#16a34a); border-radius:999px; transition:width .3s; }
+  .serp { border:1px solid var(--border); padding:14px; border-radius:10px; background:var(--panel2); }
+  .serp .t { color:#8ab4ff; font-size:18px; }
+  .serp .u { color:#4ade80; font-size:13px; }
+  .serp .d { color:#c9c9d4; font-size:14px; }
+  .ed { display:flex; gap:18px; align-items:flex-start; }
+  .ed .left { flex:1; min-width:0; }
+  .ed .right { width:320px; flex-shrink:0; }
+  .tabs { display:flex; gap:4px; flex-wrap:wrap; margin-bottom:14px; }
+  .tabs button { background:transparent; color:var(--text); border:1px solid var(--border); font-weight:600; padding:8px 14px; }
+  .tabs button.on { background:var(--blue); border-color:var(--blue); color:#fff; }
+  .checks-list { list-style:none; margin:10px 0 0; padding:0; font-size:14px; }
+  .checks-list li { padding:3px 0; }
+  .checks-list .ok { color:#4ade80; }
+  .checks-list .bad { color:#f87171; }
+  pre.ld { white-space:pre-wrap; font-size:12px; background:#111118; padding:10px; border-radius:8px; border:1px solid var(--border); max-height:220px; overflow:auto; }
+  .radio-row label { display:inline-block; margin:6px 14px 0 0; color:var(--text); font-weight:400; }
+  .radio-row input { margin-right:5px; }
+  /* ---------- Login gate ---------- */
+  .gate-wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; background:radial-gradient(600px 400px at 15% 10%,rgba(236,0,140,.25),transparent),linear-gradient(135deg,#0f172a,#1e3a8a 55%,#1d4ed8); }
+  .gate-card { width:100%; max-width:400px; background:#fff; color:#0f172a; border-radius:20px; padding:36px 32px 28px; box-shadow:0 24px 60px rgba(2,6,23,.45); text-align:center; }
+  .gate-card.shake { animation:shake .35s ease; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-7px)} 75%{transform:translateX(7px)} }
+  .gate-logo { width:64px; height:64px; margin:0 auto 14px; border-radius:18px; background:linear-gradient(135deg,#ec008c,#ad1457); display:flex; align-items:center; justify-content:center; font-size:30px; }
+  .gate-card h1 { font-size:24px; margin:0; color:#0f172a; }
+  .gate-sub { color:var(--blue); font-weight:700; font-size:12px; letter-spacing:.16em; text-transform:uppercase; margin:5px 0 18px; }
+  .gate-hint { color:#64748b; font-size:14px; margin:0 0 18px; line-height:1.5; }
+  .pw-wrap { position:relative; margin-bottom:12px; }
+  .pw-wrap input { margin:0; padding-right:42px; background:#fff; color:#0f172a; border:1px solid #cbd5e1; }
+  .pw-eye { position:absolute; right:6px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:16px; padding:6px; }
+  .gate-err { display:block; background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; border-radius:8px; padding:9px 12px; font-size:13px; font-weight:600; margin:0 0 12px; text-align:left; }
+  .gate-btn { width:100%; padding:13px; font-size:16px; margin:2px 0 16px; }
+  .gate-note { font-size:12px; color:#64748b; line-height:1.6; margin:0; text-align:left; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px 12px; }
+  @media (max-width:900px){ .ed{flex-direction:column} .ed .right{width:100%} }
+  @media (max-width:768px){
+    .wrap{flex-direction:column}
+    .side{position:fixed; left:0; top:0; bottom:0; height:100vh; z-index:60; transform:translateX(-105%); transition:transform .2s; width:250px; }
+    .side.open{transform:none; box-shadow:0 0 40px rgba(0,0,0,.5);}
+    .hamb{display:inline-block;}
+    .main{padding:18px;}
+    .topbar{flex-wrap:wrap;}
+    .topbar .ptitle{display:none;}
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
 
-  <!-- Password gate: local only. The password is kept only in memory
-       for this browser session and is sent to /api/publish, where the
-       server checks it against the ADMIN_PASSWORD variable. It is
-       never written into any file. -->
-  <div id="gate" class="card">
+<!-- Password gate: the password is kept only in memory for this
+     browser session and is sent to /api/publish, where the server
+     checks it against the ADMIN_PASSWORD variable. It is never
+     written into any file. -->
+<div id="gate" class="gate-wrap">
+  <div class="gate-card" id="gateCard">
+    <div class="gate-logo">🎬</div>
     <h1>VidTheme Admin</h1>
-    <p class="muted">Enter the admin password to manage videos. It is checked by the server — nothing is stored in the site code.</p>
-    <label for="gatePass">Admin password</label>
-    <input type="password" id="gatePass" autocomplete="current-password" />
-    <div style="margin-top:14px"><button class="btn-pink" id="gateBtn" type="button">Unlock</button></div>
-    <div class="msg err" id="gateMsg"></div>
-  </div>
-
-  <div id="dash" class="hidden">
-    <h1>VidTheme Admin</h1>
-    <p class="muted">Videos are stored in <code>videos.json</code>. Publish writes to GitHub via <code>/api/publish</code> — the public site fetches the latest file on every load, so published videos appear without a redeploy. <a href="/" target="_blank" rel="noopener">View live site</a></p>
-    <p class="muted" id="countLine">Loading videos…</p>
-
-    <div class="card">
-      <h2 id="formTitle" style="margin-top:0">Add video</h2>
-      <div class="row">
-        <div>
-          <label for="fTitle">Title</label>
-          <input type="text" id="fTitle" placeholder="e.g. Hidden Waterfalls of the Rainforest" />
-        </div>
-        <div>
-          <label for="fDuration">Duration (mm:ss)</label>
-          <input type="text" id="fDuration" placeholder="12:34" />
-        </div>
-      </div>
-      <div class="row">
-        <div>
-          <label for="fSlug">Slug (auto from title)</label>
-          <input type="text" id="fSlug" placeholder="hidden-waterfalls-of-the-rainforest" />
-        </div>
-        <div>
-          <label for="fDate">Date</label>
-          <input type="date" id="fDate" />
-        </div>
-      </div>
-      <label for="fThumb">Thumbnail URL (16:9 — local assets/thumbs/… or https://…)</label>
-      <input type="text" id="fThumb" placeholder="assets/thumbs/waterfall.svg" />
-      <label for="fEmbed">Embed URL (the iframe src for the player)</label>
-      <input type="url" id="fEmbed" placeholder="https://…/embed/…" />
-      <label>Category / tags</label>
-      <div class="checks" id="fTags"></div>
-      <div id="previewBox">
-        <label>Live preview</label>
-        <div class="preview" id="preview"></div>
-      </div>
-      <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap">
-        <button class="btn-green" id="publishBtn" type="button">Publish</button>
-        <button class="btn-ghost" id="clearBtn" type="button">Clear form</button>
-        <button class="btn-ghost" id="exportBtn" type="button">Export videos.json</button>
-      </div>
-      <div class="msg" id="msg"></div>
+    <div class="gate-sub">Video Dashboard</div>
+    <p class="gate-hint">Enter the admin password to manage videos. It is checked by the server — nothing is stored in the site code.</p>
+    <div class="pw-wrap">
+      <input type="password" id="gatePass" autocomplete="current-password" placeholder="Admin password" />
+      <button class="pw-eye" id="gateEye" type="button" title="Show / hide password">👁</button>
     </div>
+    <div class="gate-err" id="gateMsg" style="display:none"></div>
+    <button class="btn-pink gate-btn" id="gateBtn" type="button">Unlock</button>
+    <p class="gate-note">The password lives in the Cloudflare <b>ADMIN_PASSWORD</b> variable. A wrong password only shows up when you Publish — the dashboard itself opens with any password, the server is the authority.</p>
+  </div>
+</div>
 
-    <div class="card">
-      <h2 style="margin-top:0">Videos</h2>
-      <input type="text" id="filterInput" placeholder="Filter by title or category…" />
-      <div style="overflow-x:auto; margin-top:8px">
-        <table>
-          <thead><tr><th></th><th>Title</th><th>Category</th><th>Duration</th><th>Date</th><th></th></tr></thead>
-          <tbody id="listBody"></tbody>
-        </table>
+<div id="app" class="hidden">
+  <div class="topbar">
+    <button class="hamb" id="hamb" type="button" aria-label="Menu">☰</button>
+    <b class="logo">VidTheme Admin</b>
+    <span class="ptitle" id="pageTitle">Dashboard</span>
+    <span class="sp"></span>
+    <span class="count-pill" id="topCount">— videos</span>
+    <a class="tlink" href="/" target="_blank" rel="noopener">View Site ↗</a>
+    <button class="btn-ghost btn-sm" id="logoutBtn" type="button" style="color:#fff;border-color:rgba(255,255,255,.4)">Log out</button>
+  </div>
+  <div class="wrap">
+    <nav class="side" id="sideNav" aria-label="Admin menu">
+      <div class="h">Content</div>
+      <button data-view="dash" class="on">📊 Dashboard</button>
+      <button data-view="videos">🎬 All Videos</button>
+      <button data-view="editor" class="sub">＋ Add New Video</button>
+      <button data-view="published" class="sub">✓ Published</button>
+      <button data-view="drafts" class="sub">📝 Drafts</button>
+      <div class="h">SEO</div>
+      <button data-view="seo">🎯 SEO Checker</button>
+      <button data-view="meta">🏷 Meta Tags</button>
+      <div class="h">System</div>
+      <button data-view="settings">⚙️ Settings</button>
+      <div class="foot"><div id="sideCount">Total videos: —</div><div style="margin-top:6px">Drafts are hidden from the public site until published.</div></div>
+    </nav>
+    <div class="main">
+
+      <!-- ================= Dashboard ================= -->
+      <div id="v-dash" class="view on">
+        <h1>Dashboard</h1>
+        <div class="note"><b>How publishing works:</b> videos live in <b>videos.json</b> on GitHub. Pressing <b>Publish</b> in the editor saves straight to GitHub via <code>/api/publish</code> — the public site fetches the latest file on every load, so a published video appears without a redeploy. <b>Drafts never show on the public site.</b></div>
+        <div class="grid" id="stats"></div>
+        <div class="card"><h2>Recent Videos</h2><div id="recent"></div></div>
+        <div class="card"><h2>Quick Draft</h2>
+          <input type="text" id="qd" placeholder="Video idea / title…" />
+          <button class="btn" id="qdBtn" type="button">Save as Draft</button>
+          <p class="muted" id="qdMsg"></p>
+          <p class="muted">Quick Draft saves the title as a draft on <b>this device</b> only. Open it from Drafts, add an embed URL, then Publish to put it live.</p>
+        </div>
       </div>
+
+      <!-- ================= All Videos ================= -->
+      <div id="v-videos" class="view">
+        <h1>All Videos</h1>
+        <div class="card">
+          <div class="tabs" role="tablist">
+            <button type="button" data-tab="all" class="on" id="tabAll">All</button>
+            <button type="button" data-tab="published" id="tabPub">Published</button>
+            <button type="button" data-tab="draft" id="tabDrf">Drafts</button>
+          </div>
+          <input type="text" id="filterInput" placeholder="Search by title or category…" />
+          <div style="overflow-x:auto; margin-top:8px">
+            <table>
+              <thead><tr><th></th><th>Title</th><th>Category</th><th>Duration</th><th>Date</th><th>Status</th><th></th></tr></thead>
+              <tbody id="listBody"></tbody>
+            </table>
+          </div>
+          <div class="msg" id="videosMsg"></div>
+        </div>
+      </div>
+
+      <!-- ================= Add / Edit Video ================= -->
+      <div id="v-editor" class="view">
+        <h1 id="formTitle">Add New Video</h1>
+        <div class="ed">
+          <div class="left">
+            <div class="card">
+              <div class="row">
+                <div>
+                  <label for="fTitle">Title</label>
+                  <input type="text" id="fTitle" placeholder="e.g. Hidden Waterfalls of the Rainforest" />
+                </div>
+                <div>
+                  <label for="fDuration">Duration (mm:ss)</label>
+                  <input type="text" id="fDuration" placeholder="12:34" />
+                </div>
+              </div>
+              <div class="row">
+                <div>
+                  <label for="fSlug">Slug (auto from title)</label>
+                  <input type="text" id="fSlug" placeholder="hidden-waterfalls-of-the-rainforest" />
+                </div>
+                <div>
+                  <label for="fDate">Date</label>
+                  <input type="date" id="fDate" />
+                </div>
+              </div>
+              <label for="fThumb">Thumbnail URL (16:9 — local assets/thumbs/… or https://…)</label>
+              <input type="text" id="fThumb" placeholder="assets/thumbs/waterfall.svg" />
+              <label for="fEmbed">Embed URL (the iframe src for the player)</label>
+              <input type="url" id="fEmbed" placeholder="https://…/embed/…" />
+              <label>Category / tags</label>
+              <div class="checks" id="fTags"></div>
+              <div id="previewBox">
+                <label>Live preview</label>
+                <div class="preview" id="preview"></div>
+              </div>
+            </div>
+
+            <div class="card" id="seoCard">
+              <h2>🎯 SEO — live score</h2>
+              <div class="bar"><i id="scorebar" style="width:0%"></i></div>
+              <p><b id="score">0 / 100</b></p>
+              <ul class="checks-list" id="checks"></ul>
+              <label for="fSeo">SEO Title (0–60)</label>
+              <input type="text" id="fSeo" maxlength="70" />
+              <span class="muted" id="cSeo">0 / 60</span>
+              <label for="fMeta">Meta Description (0–160)</label>
+              <textarea id="fMeta" rows="3" maxlength="180"></textarea>
+              <span class="muted" id="cMeta">0 / 160</span>
+              <label for="fKw">Meta Keywords (comma separated)</label>
+              <input type="text" id="fKw" placeholder="e.g. waterfalls, rainforest, nature" />
+              <label for="fFocus">Focus Keyword</label>
+              <input type="text" id="fFocus" placeholder="e.g. hidden waterfalls rainforest" />
+              <h3>Google Preview</h3>
+              <div class="serp"><div class="t" id="serpTitle"></div><div class="u" id="serpUrl"></div><div class="d" id="serpDesc"></div></div>
+              <h3>JSON-LD Preview (VideoObject schema)</h3>
+              <pre class="ld" id="ldPrev"></pre>
+            </div>
+          </div>
+
+          <div class="right">
+            <div class="card">
+              <h2>Publish</h2>
+              <label>Status</label>
+              <div class="radio-row">
+                <label><input type="radio" name="fStatus" value="published" checked /> Published</label>
+                <label><input type="radio" name="fStatus" value="draft" /> Draft</label>
+              </div>
+              <p class="muted">Drafts are saved to GitHub too, but the public site never shows them until you Publish.</p>
+              <div style="display:grid; gap:8px; margin-top:12px">
+                <button class="btn-green" id="publishBtn" type="button" style="padding:14px;font-size:16px">🚀 Publish</button>
+                <button class="btn" id="draftBtn" type="button">💾 Save Draft</button>
+                <button class="btn-ghost" id="clearBtn" type="button">Clear form</button>
+                <button class="btn-ghost" id="exportBtn" type="button">⬇ Export videos.json</button>
+              </div>
+              <div class="msg" id="msg"></div>
+            </div>
+            <div class="card">
+              <h2>Publish checklist</h2>
+              <p class="muted">Title, embed URL and at least one category are required. A good SEO score (80+) needs a 30–60 character SEO title, a 120–160 character meta description and the focus keyword in the title, meta and slug.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= SEO Checker ================= -->
+      <div id="v-seo" class="view">
+        <h1>SEO Checker</h1>
+        <div class="card">
+          <h2>All Videos — SEO Scores</h2>
+          <p class="muted" id="seoSummary"></p>
+          <div style="overflow-x:auto">
+            <table>
+              <thead><tr><th>Score</th><th>Title</th><th>Status</th><th></th></tr></thead>
+              <tbody id="seoList"></tbody>
+            </table>
+          </div>
+          <div style="margin-top:14px"><button class="btn-ghost" id="seoRefresh" type="button">↻ Refresh Scores</button></div>
+        </div>
+      </div>
+
+      <!-- ================= Meta Tags ================= -->
+      <div id="v-meta" class="view">
+        <h1>Meta Tags</h1>
+        <div class="card">
+          <h2>Default Meta</h2>
+          <p class="muted">Used as a placeholder in the editor when a video has no SEO title or meta description of its own. Stored on this device only — nothing is sent to the server.</p>
+          <label for="defSuffix">Default title suffix</label>
+          <input type="text" id="defSuffix" placeholder=" — VidTheme" />
+          <label for="defMeta">Default meta description</label>
+          <textarea id="defMeta" rows="3" placeholder="Watch clean, free videos by category on VidTheme."></textarea>
+          <div style="margin-top:12px"><button class="btn" id="defSaveBtn" type="button">Save Defaults</button></div>
+          <div class="msg" id="defMsg"></div>
+        </div>
+        <div class="card">
+          <h2>All Videos — Meta</h2>
+          <div style="overflow-x:auto">
+            <table>
+              <thead><tr><th>Title</th><th>SEO Title</th><th>Meta Description</th><th>Meta Keywords</th><th></th></tr></thead>
+              <tbody id="metaList"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= Settings ================= -->
+      <div id="v-settings" class="view">
+        <h1>Settings</h1>
+        <div class="card">
+          <h2>How publishing works</h2>
+          <p>Videos are stored in <code>videos.json</code> in the GitHub repo <code>facttube78600-ai/vidtehemsite</code> (branch <code>main</code>). The dashboard saves through <code>/api/publish</code>, a Cloudflare Pages Function that commits the updated file to GitHub. The public site fetches the latest <code>videos.json</code> on every load, so published videos appear without a redeploy.</p>
+          <p>Live site: <a href="https://vidtehemsite.pages.dev/" target="_blank" rel="noopener">https://vidtehemsite.pages.dev/</a></p>
+        </div>
+        <div class="card">
+          <h2>Credentials</h2>
+          <p><b>ADMIN_PASSWORD</b> and <b>GITHUB_TOKEN</b> live in Cloudflare Pages environment variables — never in code, never in this dashboard. The token is fine-grained, this repository only, with Contents: Read and write. There are no password or token fields anywhere in this dashboard.</p>
+        </div>
+        <div class="card">
+          <h2>Data</h2>
+          <p class="muted">Quick Drafts and Default Meta are stored in this browser only. Everything else lives in GitHub.</p>
+          <button class="btn" id="exportBtn2" type="button">⬇ Export videos.json</button>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -126,35 +364,211 @@
 <script>
 (function () {
   "use strict";
-  var TAGS = ["Nature","Travel","Food","Ocean Life","Mountains","City Life","Winter","Sky"];
+  var TAGS = ["Nature", "Travel", "Food", "Ocean Life", "Mountains", "City Life", "Winter", "Sky"];
   var GITHUB_RAW_URL = "https://raw.githubusercontent.com/facttube78600-ai/vidtehemsite/main/videos.json";
+  var SITE_URL = "https://vidtehemsite.pages.dev/";
+  var LS_DRAFTS = "vt_quick_drafts";
+  var LS_SUFFIX = "vt_def_suffix";
+  var LS_DEFMETA = "vt_def_meta";
+
   var password = "";           // session only — never saved to a file
-  var videos = [];
+  var videos = [];              // server videos + local quick drafts, sorted by id
+  var localDrafts = [];
   var editingId = null;
+  var slugTouched = false;
+  var currentTab = "all";
+
+  var TITLES = { dash: "Dashboard", videos: "All Videos", editor: "Add New Video", seo: "SEO Checker", meta: "Meta Tags", settings: "Settings" };
 
   var $ = function (id) { return document.getElementById(id); };
-  function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
-  function slugify(t){ return String(t).toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,""); }
-  function showMsg(el, text, ok){ el.textContent = text; el.className = "msg " + (ok ? "ok" : "err"); }
-  function today(){ return new Date().toISOString().slice(0,10); }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function slugify(t) { return String(t).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""); }
+  function showMsg(el, text, ok) { if (!el) return; el.textContent = text; el.className = "msg " + (ok ? "ok" : "err"); }
+  function today() { return new Date().toISOString().slice(0, 10); }
+  function statusOf(v) { return v.status === "draft" ? "draft" : "published"; }
+  function nextId() {
+    var max = 0;
+    videos.forEach(function (v) { if (v.id > max) max = v.id; });
+    localDrafts.forEach(function (v) { if (v.id > max) max = v.id; });
+    return max + 1;
+  }
+  function storeGet(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+  function storeSet(k, v) { try { window.localStorage.setItem(k, v); } catch (e) { /* storage unavailable */ } }
 
-  /* Tag checkboxes */
+  /* ---------------- SEO scoring (shared by editor + checker) ----------------
+     8 checks, 12.5 points each. Input shape:
+     { title, seoTitle, meta, kw, slug, thumb, embed, tags[] } */
+  function scoreVideoData(d) {
+    var kw = (d.kw || "").trim().toLowerCase();
+    var seoTitle = d.seoTitle || d.title || "";
+    var meta = d.meta || "";
+    var checks = [
+      { label: "SEO title is 30–60 characters (" + seoTitle.length + ")", pass: seoTitle.length >= 30 && seoTitle.length <= 60 },
+      { label: "Meta description is 120–160 characters (" + meta.length + ")", pass: meta.length >= 120 && meta.length <= 160 },
+      { label: "Focus keyword in SEO title", pass: !!kw && seoTitle.toLowerCase().indexOf(kw) !== -1 },
+      { label: "Focus keyword in meta description", pass: !!kw && meta.toLowerCase().indexOf(kw) !== -1 },
+      { label: "Focus keyword in slug", pass: !!kw && (d.slug || "").toLowerCase().indexOf(kw.replace(/[^a-z0-9]+/g, "-")) !== -1 },
+      { label: "Thumbnail set", pass: !!(d.thumb || "").trim() },
+      { label: "Embed URL set", pass: !!(d.embed || "").trim() },
+      { label: "At least one category picked", pass: (d.tags || []).length > 0 }
+    ];
+    var passed = checks.filter(function (c) { return c.pass; }).length;
+    return { score: Math.round(passed * 12.5), checks: checks };
+  }
+  /* Score a stored videos.json entry (missing SEO fields count as empty). */
+  function scoreVideo(v) {
+    return scoreVideoData({
+      title: v.title || "",
+      seoTitle: v.seo_title || v.title || "",
+      meta: v.meta_description || "",
+      kw: v.focus_keyword || "",
+      slug: v.slug || "",
+      thumb: v.thumbnail || v.thumb || "",
+      embed: v.embed_url || "",
+      tags: v.tags || (v.category ? [v.category] : [])
+    });
+  }
+
+  /* ---------------- Navigation ---------------- */
+  function show(view, opts) {
+    opts = opts || {};
+    var real = view;
+    if (view === "published" || view === "drafts") { real = "videos"; currentTab = view === "published" ? "published" : "draft"; }
+    if (view === "videos" && opts.tab) currentTab = opts.tab;
+    document.querySelectorAll(".view").forEach(function (el) { el.classList.remove("on"); });
+    var target = $("v-" + real);
+    if (target) target.classList.add("on");
+    document.querySelectorAll("#sideNav button[data-view]").forEach(function (b) {
+      b.classList.toggle("on", b.getAttribute("data-view") === view || (view === "videos" && b.getAttribute("data-view") === "videos" && (opts.tab === undefined || currentTab === "all")));
+    });
+    $("pageTitle").textContent = TITLES[real] || "Dashboard";
+    if (real === "videos") renderVideos();
+    if (real === "dash") { renderStats(); renderRecent(); }
+    if (real === "seo") renderSeo();
+    if (real === "meta") renderMeta();
+    $("sideNav").classList.remove("open");
+    try { if (window.history && window.history.replaceState) window.history.replaceState(null, "", "#" + view); } catch (e) { /* ignore */ }
+    window.scrollTo(0, 0);
+  }
+
+  /* ---------------- Stats / lists ---------------- */
+  function counts() {
+    var pub = 0, drf = 0;
+    videos.forEach(function (v) { if (statusOf(v) === "draft") drf++; else pub++; });
+    return { total: videos.length, published: pub, drafts: drf, categories: TAGS.length };
+  }
+
+  function renderStats() {
+    var c = counts();
+    var cards = [
+      { ico: "🎬", label: "Total Videos", n: c.total, col: "#2563eb" },
+      { ico: "✓", label: "Published", n: c.published, col: "#16a34a" },
+      { ico: "📝", label: "Drafts", n: c.drafts, col: "#d97706" },
+      { ico: "🏷", label: "Categories", n: c.categories, col: "#ec008c" }
+    ];
+    $("stats").innerHTML = cards.map(function (s) {
+      return '<div class="card stat-card" style="--sc:' + s.col + ';margin-bottom:0"><div class="ico">' + s.ico + '</div><div class="stat">' + s.n + '</div><div class="muted">' + s.label + "</div></div>";
+    }).join("");
+    $("topCount").textContent = c.total + " videos";
+    $("sideCount").textContent = "Total videos: " + c.total;
+  }
+
+  function statusPill(v) {
+    var pill = statusOf(v) === "draft"
+      ? '<span class="tag drf">Draft</span>'
+      : '<span class="tag pub">Published</span>';
+    return pill + (v.local ? ' <span class="tag local">Local</span>' : "");
+  }
+
+  function rowHtml(v) {
+    return "<tr>" +
+      '<td><img class="thumb-mini" src="' + esc(v.thumbnail || v.thumb || "") + '" alt="" /></td>' +
+      "<td>" + esc(v.title) + "<br><span class='muted'>/" + esc(v.slug) + "-" + v.id + ".html</span></td>" +
+      "<td>" + esc(v.category || (v.tags || []).join(", ")) + "</td>" +
+      "<td>" + esc(v.duration || "") + "</td>" +
+      "<td>" + esc(v.date || "") + "</td>" +
+      "<td>" + statusPill(v) + "</td>" +
+      '<td><button class="btn-ghost btn-sm" data-edit="' + v.id + '" type="button">Edit</button> ' +
+      '<button class="btn-red" data-del="' + v.id + '" type="button">Delete</button></td></tr>';
+  }
+
+  function renderVideos() {
+    var c = counts();
+    $("tabAll").textContent = "All (" + c.total + ")";
+    $("tabPub").textContent = "Published (" + c.published + ")";
+    $("tabDrf").textContent = "Drafts (" + c.drafts + ")";
+    document.querySelectorAll(".tabs button").forEach(function (b) {
+      b.classList.toggle("on", b.getAttribute("data-tab") === currentTab);
+    });
+    var q = ($("filterInput").value || "").toLowerCase();
+    var rows = videos.filter(function (v) {
+      if (currentTab === "published" && statusOf(v) !== "published") return false;
+      if (currentTab === "draft" && statusOf(v) !== "draft") return false;
+      return !q || v.title.toLowerCase().indexOf(q) !== -1 || (v.category || "").toLowerCase().indexOf(q) !== -1;
+    }).slice().reverse();
+    $("listBody").innerHTML = rows.map(rowHtml).join("") || '<tr><td colspan="7">No videos found.</td></tr>';
+  }
+
+  function renderRecent() {
+    var rows = videos.slice().reverse().slice(0, 5);
+    $("recent").innerHTML = rows.length ? rows.map(function (v) {
+      return '<div style="display:flex;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid #2c2c3a">' +
+        '<img class="thumb-mini" src="' + esc(v.thumbnail || v.thumb || "") + '" alt="" />' +
+        '<div style="flex:1;min-width:0"><b>' + esc(v.title) + '</b><br><span class="muted">' + esc(v.category || "") + " · " + esc(v.date || "") + "</span></div>" +
+        statusPill(v) + ' <button class="btn-ghost btn-sm" data-edit="' + v.id + '" type="button">Edit</button></div>';
+    }).join("") : '<p class="muted">No videos yet.</p>';
+  }
+
+  function renderSeo() {
+    var scored = videos.map(function (v) { return { v: v, s: scoreVideo(v).score }; })
+      .sort(function (a, b) { return a.s - b.s; });
+    var avg = scored.length ? Math.round(scored.reduce(function (a, b) { return a + b.s; }, 0) / scored.length) : 0;
+    var low = scored.filter(function (x) { return x.s < 80; }).length;
+    $("seoSummary").textContent = "Average SEO score " + avg + " / 100 · " + low + " video(s) below 80 · worst first.";
+    $("seoList").innerHTML = scored.map(function (x) {
+      var col = x.s >= 80 ? "#4ade80" : (x.s >= 50 ? "#fbbf24" : "#f87171");
+      return "<tr><td><b style='color:" + col + ";font-size:18px'>" + x.s + "</b> / 100</td>" +
+        "<td>" + esc(x.v.title) + "</td><td>" + statusPill(x.v) + "</td>" +
+        '<td><button class="btn-ghost btn-sm" data-edit="' + x.v.id + '" type="button">Edit</button></td></tr>';
+    }).join("") || '<tr><td colspan="4">No videos yet.</td></tr>';
+  }
+
+  function trunc(s, n) { s = String(s || ""); return s.length > n ? s.slice(0, n) + "…" : (s || "—"); }
+
+  function renderMeta() {
+    $("metaList").innerHTML = videos.slice().reverse().map(function (v) {
+      return "<tr><td>" + esc(v.title) + "</td>" +
+        "<td>" + esc(trunc(v.seo_title, 60)) + "</td>" +
+        "<td>" + esc(trunc(v.meta_description, 80)) + "</td>" +
+        "<td>" + esc(trunc(v.meta_keywords, 60)) + "</td>" +
+        '<td><button class="btn-ghost btn-sm" data-edit="' + v.id + '" data-scroll="seo" type="button">Edit</button></td></tr>';
+    }).join("") || '<tr><td colspan="5">No videos yet.</td></tr>';
+  }
+
+  /* ---------------- Editor ---------------- */
   $("fTags").innerHTML = TAGS.map(function (t) {
     return '<label><input type="checkbox" value="' + esc(t) + '" /> ' + esc(t) + "</label>";
   }).join("");
   $("fDate").value = today();
 
-  function checkedTags(){
-    return Array.prototype.slice.call(document.querySelectorAll("#fTags input:checked")).map(function (c){ return c.value; });
+  function checkedTags() {
+    return Array.prototype.slice.call(document.querySelectorAll("#fTags input:checked")).map(function (c) { return c.value; });
   }
-  function setCheckedTags(tags){
-    document.querySelectorAll("#fTags input").forEach(function (c){ c.checked = tags.indexOf(c.value) !== -1; });
+  function setCheckedTags(tags) {
+    document.querySelectorAll("#fTags input").forEach(function (c) { c.checked = tags.indexOf(c.value) !== -1; });
+  }
+  function statusRadio() {
+    var r = document.querySelector('input[name="fStatus"]:checked');
+    return r ? r.value : "published";
+  }
+  function setStatusRadio(s) {
+    document.querySelectorAll('input[name="fStatus"]').forEach(function (r) { r.checked = r.value === s; });
   }
 
-  function readForm(){
+  function readForm(statusOverride) {
     var title = $("fTitle").value.trim();
     return {
-      id: editingId || (videos.length ? Math.max.apply(null, videos.map(function(v){return v.id;})) + 1 : 1),
+      id: editingId || nextId(),
       slug: $("fSlug").value.trim() || slugify(title),
       title: title,
       duration: $("fDuration").value.trim(),
@@ -162,124 +576,288 @@
       embed_url: $("fEmbed").value.trim(),
       tags: checkedTags(),
       category: checkedTags()[0] || "",
-      date: $("fDate").value || today()
+      date: $("fDate").value || today(),
+      status: statusOverride || statusRadio(),
+      seo_title: $("fSeo").value.trim(),
+      meta_description: $("fMeta").value.trim(),
+      meta_keywords: $("fKw").value.trim(),
+      focus_keyword: $("fFocus").value.trim()
     };
   }
 
-  function updatePreview(){
+  function updatePreview() {
     var v = readForm();
     $("preview").innerHTML =
       '<span class="thumb"><img src="' + esc(v.thumbnail || "assets/thumbs/waterfall.svg") + '" alt="" />' +
       '<span class="duration">' + esc(v.duration || "0:00") + "</span></span>" +
       '<span class="strip">' + esc(v.title || "Video title") + "</span>";
-    if (!$("fSlug").value.trim() && v.title) { /* keep slug in sync until edited by hand */ }
   }
-  ["fTitle","fDuration","fThumb"].forEach(function(id){ $(id).addEventListener("input", updatePreview); });
-  $("fTitle").addEventListener("input", function(){ if (!editingId) $("fSlug").value = slugify($("fTitle").value); updatePreview(); });
-  document.querySelectorAll("#fTags input").forEach(function(c){ c.addEventListener("change", updatePreview); });
 
-  function clearForm(){
+  function updateSeo() {
+    var v = readForm();
+    var d = {
+      title: v.title,
+      seoTitle: v.seo_title || v.title,
+      meta: v.meta_description,
+      kw: v.focus_keyword,
+      slug: v.slug,
+      thumb: v.thumbnail,
+      embed: v.embed_url,
+      tags: v.tags
+    };
+    var res = scoreVideoData(d);
+    $("scorebar").style.width = res.score + "%";
+    $("scorebar").style.background = res.score >= 80 ? "linear-gradient(90deg,#22c55e,#16a34a)" : (res.score >= 50 ? "linear-gradient(90deg,#f59e0b,#d97706)" : "linear-gradient(90deg,#f87171,#dc2626)");
+    $("score").textContent = res.score + " / 100";
+    $("checks").innerHTML = res.checks.map(function (c) {
+      return '<li class="' + (c.pass ? "ok" : "bad") + '">' + (c.pass ? "✓ " : "✗ ") + esc(c.label) + "</li>";
+    }).join("");
+    $("cSeo").textContent = v.seo_title.length + " / 60";
+    $("cMeta").textContent = v.meta_description.length + " / 160";
+    var url = SITE_URL + "video/" + (v.slug || slugify(v.title || "video")) + "-" + v.id + ".html";
+    $("serpTitle").textContent = d.seoTitle || "Video title";
+    $("serpUrl").textContent = url;
+    $("serpDesc").textContent = v.meta_description || storeGet(LS_DEFMETA) || "No meta description yet.";
+    $("ldPrev").textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "VideoObject",
+      name: v.title || "Video title",
+      description: v.meta_description || "",
+      thumbnailUrl: v.thumbnail || "",
+      uploadDate: v.date || today(),
+      embedUrl: v.embed_url || ""
+    }, null, 2);
+  }
+
+  function refreshForm() { updatePreview(); updateSeo(); }
+
+  ["fTitle", "fDuration", "fThumb", "fEmbed"].forEach(function (id) { $(id).addEventListener("input", refreshForm); });
+  ["fSeo", "fMeta", "fKw", "fFocus", "fSlug", "fDate"].forEach(function (id) { $(id).addEventListener("input", refreshForm); });
+  $("fTitle").addEventListener("input", function () {
+    if (!slugTouched) $("fSlug").value = slugify($("fTitle").value);
+    refreshForm();
+  });
+  $("fSlug").addEventListener("input", function () { slugTouched = true; });
+  document.querySelectorAll("#fTags input").forEach(function (c) { c.addEventListener("change", refreshForm); });
+  document.querySelectorAll('input[name="fStatus"]').forEach(function (r) { r.addEventListener("change", refreshForm); });
+
+  function clearForm() {
     editingId = null;
-    $("formTitle").textContent = "Add video";
-    ["fTitle","fDuration","fSlug","fThumb","fEmbed"].forEach(function(id){ $(id).value = ""; });
+    slugTouched = false;
+    $("formTitle").textContent = "Add New Video";
+    ["fTitle", "fDuration", "fSlug", "fThumb", "fEmbed", "fSeo", "fMeta", "fKw", "fFocus"].forEach(function (id) { $(id).value = ""; });
     $("fDate").value = today();
     setCheckedTags([]);
-    updatePreview();
+    setStatusRadio("published");
+    refreshForm();
   }
 
-  function renderList(filter){
-    var q = (filter || "").toLowerCase();
-    var rows = videos.filter(function(v){
-      return !q || v.title.toLowerCase().indexOf(q) !== -1 || (v.category||"").toLowerCase().indexOf(q) !== -1;
-    }).slice().reverse();
-    $("countLine").textContent = videos.length + " videos · newest first";
-    $("listBody").innerHTML = rows.map(function(v){
-      return "<tr>" +
-        '<td><img class="thumb-mini" src="' + esc(v.thumbnail || v.thumb || "") + '" alt="" /></td>' +
-        "<td>" + esc(v.title) + "<br><span class='muted'>/" + esc(v.slug) + "-" + v.id + ".html</span></td>" +
-        "<td>" + esc(v.category || (v.tags||[]).join(", ")) + "</td>" +
-        "<td>" + esc(v.duration || "") + "</td>" +
-        "<td>" + esc(v.date || "") + "</td>" +
-        '<td><button class="btn-ghost btn-sm" data-edit="' + v.id + '" type="button">Edit</button> ' +
-        '<button class="btn-red" data-del="' + v.id + '" type="button">Delete</button></td></tr>';
-    }).join("") || '<tr><td colspan="6">No videos found.</td></tr>';
+  function loadIntoForm(v, scrollToSeo) {
+    editingId = v.id;
+    slugTouched = true;
+    $("formTitle").textContent = "Edit video #" + v.id;
+    $("fTitle").value = v.title || "";
+    $("fDuration").value = v.duration || "";
+    $("fSlug").value = v.slug || "";
+    $("fThumb").value = v.thumbnail || v.thumb || "";
+    $("fEmbed").value = v.embed_url || "";
+    $("fDate").value = v.date || today();
+    $("fSeo").value = v.seo_title || "";
+    $("fMeta").value = v.meta_description || "";
+    $("fKw").value = v.meta_keywords || "";
+    $("fFocus").value = v.focus_keyword || "";
+    setCheckedTags(v.tags || (v.category ? [v.category] : []));
+    setStatusRadio(statusOf(v));
+    refreshForm();
+    show("editor");
+    if (scrollToSeo && $("seoCard").scrollIntoView) $("seoCard").scrollIntoView();
   }
 
-  function loadVideos(){
-    return fetch(GITHUB_RAW_URL + "?v=" + Date.now(), { cache: "no-store" })
-      .then(function(r){ if(!r.ok) throw new Error("raw "+r.status); return r.json(); })
-      .catch(function(){ return fetch("videos.json?v=" + Date.now()).then(function(r){ return r.json(); }); })
-      .then(function(data){
-        videos = (Array.isArray(data) ? data : (data.videos || [])).slice().sort(function(a,b){ return a.id - b.id; });
-        renderList($("filterInput").value);
-      });
-  }
+  function newVideo() { clearForm(); show("editor"); }
 
-  function publish(video, isDelete){
+  /* ---------------- Publish ---------------- */
+  function publish(video, isDelete) {
     showMsg($("msg"), isDelete ? "Deleting…" : "Publishing…", true);
     return fetch("/api/publish", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ password: password, video: video, _delete: !!isDelete })
-    }).then(function(r){ return r.json().then(function(j){ return { status: r.status, body: j }; }); })
-    .then(function(res){
+    }).then(function (r) { return r.json().then(function (j) { return { status: r.status, body: j }; }); })
+    .then(function (res) {
       if (res.status !== 200) throw new Error(res.body.error || ("Publish failed (HTTP " + res.status + ")"));
+      if (video.local) { localDrafts = localDrafts.filter(function (d) { return d.id !== video.id; }); saveLocalDrafts(); }
       showMsg($("msg"), (isDelete ? "Deleted. " : "Published. ") + res.body.message, true);
-      return loadVideos();
+      return loadVideos().then(function () { show("videos"); });
     })
-    .catch(function(err){ showMsg($("msg"), err.message, false); });
+    .catch(function (err) { showMsg($("msg"), err.message, false); });
   }
 
-  $("publishBtn").addEventListener("click", function(){
-    var v = readForm();
+  function saveVideo(status) {
+    var v = readForm(status);
     if (!v.title) { showMsg($("msg"), "Title is required.", false); return; }
     if (!v.embed_url) { showMsg($("msg"), "Embed URL is required — the player iframe has nothing to load without it.", false); return; }
     if (!v.tags.length) { showMsg($("msg"), "Pick at least one category.", false); return; }
-    publish(v, false).then(function(){ clearForm(); });
-  });
+    if (v.local === undefined && editingId) {
+      var existing = videos.filter(function (x) { return x.id === editingId; })[0];
+      if (existing && existing.local) v.local = true;
+    }
+    publish(v, false).then(function () { clearForm(); });
+  }
 
+  $("publishBtn").addEventListener("click", function () { saveVideo("published"); });
+  $("draftBtn").addEventListener("click", function () { saveVideo("draft"); });
   $("clearBtn").addEventListener("click", clearForm);
-  $("exportBtn").addEventListener("click", function(){
-    var blob = new Blob([JSON.stringify(videos, null, 2)], { type: "application/json" });
+  function exportJson() {
+    var blob = new Blob([JSON.stringify(videos.filter(function (v) { return !v.local; }).map(function (v) {
+      var o = {}; Object.keys(v).forEach(function (k) { if (k !== "local") o[k] = v[k]; }); return o;
+    }), null, 2)], { type: "application/json" });
     var a = document.createElement("a");
     a.href = URL.createObjectURL(blob); a.download = "videos.json"; a.click();
-  });
-  $("filterInput").addEventListener("input", function(){ renderList($("filterInput").value); });
+  }
+  $("exportBtn").addEventListener("click", exportJson);
+  $("exportBtn2").addEventListener("click", exportJson);
 
-  $("listBody").addEventListener("click", function(e){
+  /* ---------------- Lists: edit / delete (delegated) ---------------- */
+  function findVideo(id) {
+    var found = null;
+    videos.forEach(function (v) { if (v.id === id) found = v; });
+    return found;
+  }
+  function handleListClick(e) {
     var editBtn = e.target.closest ? e.target.closest("[data-edit]") : null;
     var delBtn = e.target.closest ? e.target.closest("[data-del]") : null;
     if (editBtn) {
-      var v = videos.filter(function(x){ return x.id === parseInt(editBtn.getAttribute("data-edit"), 10); })[0];
-      if (!v) return;
-      editingId = v.id;
-      $("formTitle").textContent = "Edit video #" + v.id;
-      $("fTitle").value = v.title; $("fDuration").value = v.duration || "";
-      $("fSlug").value = v.slug; $("fThumb").value = v.thumbnail || v.thumb || "";
-      $("fEmbed").value = v.embed_url || ""; $("fDate").value = v.date || today();
-      setCheckedTags(v.tags || (v.category ? [v.category] : []));
-      updatePreview();
-      window.scrollTo(0, 0);
+      var v = findVideo(parseInt(editBtn.getAttribute("data-edit"), 10));
+      if (v) loadIntoForm(v, editBtn.getAttribute("data-scroll") === "seo");
     }
     if (delBtn) {
       var id = parseInt(delBtn.getAttribute("data-del"), 10);
-      var v2 = videos.filter(function(x){ return x.id === id; })[0];
-      if (v2 && confirm("Delete '" + v2.title + "'?")) publish(v2, true);
+      var v2 = findVideo(id);
+      if (!v2) return;
+      if (v2.local) {
+        localDrafts = localDrafts.filter(function (d) { return d.id !== id; });
+        saveLocalDrafts(); mergeLocalDrafts(); renderVideos(); renderStats(); renderRecent();
+        showMsg($("videosMsg"), "Local draft deleted.", true);
+        return;
+      }
+      if (confirm("Delete '" + v2.title + "'?")) publish(v2, true);
     }
+  }
+  ["listBody", "recent", "seoList", "metaList"].forEach(function (id) {
+    $(id).addEventListener("click", handleListClick);
   });
 
-  /* Gate: any password is accepted locally — the server is the
-     authority. A wrong password only shows up when Publish is used. */
-  function unlock(){
+  $("filterInput").addEventListener("input", renderVideos);
+  document.querySelectorAll(".tabs button").forEach(function (b) {
+    b.addEventListener("click", function () { currentTab = b.getAttribute("data-tab"); renderVideos(); });
+  });
+  $("seoRefresh").addEventListener("click", renderSeo);
+
+  /* ---------------- Quick Draft (this device only) ---------------- */
+  function loadLocalDrafts() {
+    try { localDrafts = JSON.parse(storeGet(LS_DRAFTS) || "[]"); } catch (e) { localDrafts = []; }
+    if (!Array.isArray(localDrafts)) localDrafts = [];
+  }
+  function saveLocalDrafts() { storeSet(LS_DRAFTS, JSON.stringify(localDrafts)); }
+  function mergeLocalDrafts() {
+    var serverIds = {};
+    videos.forEach(function (v) { serverIds[v.id] = true; });
+    var merged = videos.filter(function (v) { return !v.local; });
+    localDrafts.forEach(function (d) { if (!serverIds[d.id]) merged.push(d); });
+    videos = merged.sort(function (a, b) { return a.id - b.id; });
+  }
+  function quickDraft() {
+    var title = $("qd").value.trim();
+    if (!title) { $("qdMsg").textContent = "Type a title first."; return; }
+    var d = {
+      id: nextId(), slug: slugify(title), title: title, duration: "", thumbnail: "",
+      embed_url: "", tags: ["Nature"], category: "Nature", date: today(),
+      status: "draft", seo_title: "", meta_description: "", meta_keywords: "", focus_keyword: "", local: true
+    };
+    localDrafts.push(d); saveLocalDrafts(); mergeLocalDrafts();
+    $("qd").value = "";
+    $("qdMsg").textContent = "Draft saved on this device — open it from Drafts, add an embed URL, then Publish.";
+    renderStats(); renderRecent();
+  }
+  $("qdBtn").addEventListener("click", quickDraft);
+  $("qd").addEventListener("keydown", function (e) { if (e.key === "Enter") quickDraft(); });
+
+  /* ---------------- Default Meta (this device only) ---------------- */
+  function applyDefaults() {
+    var suffix = storeGet(LS_SUFFIX) || " — VidTheme";
+    var defMeta = storeGet(LS_DEFMETA) || "";
+    $("defSuffix").value = suffix;
+    $("defMeta").value = defMeta;
+    $("fSeo").placeholder = "Video title" + suffix;
+    $("fMeta").placeholder = defMeta || "Describe this video in 120–160 characters…";
+  }
+  $("defSaveBtn").addEventListener("click", function () {
+    storeSet(LS_SUFFIX, $("defSuffix").value);
+    storeSet(LS_DEFMETA, $("defMeta").value);
+    applyDefaults();
+    showMsg($("defMsg"), "Defaults saved on this device.", true);
+  });
+
+  /* ---------------- Load videos ---------------- */
+  function loadVideos() {
+    return fetch(GITHUB_RAW_URL + "?v=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw new Error("raw " + r.status); return r.json(); })
+      .catch(function () { return fetch("videos.json?v=" + Date.now()).then(function (r) { return r.json(); }); })
+      .then(function (data) {
+        var list = Array.isArray(data) ? data : (data.videos || []);
+        videos = list.slice().sort(function (a, b) { return a.id - b.id; });
+        mergeLocalDrafts();
+        renderStats(); renderRecent(); renderVideos(); renderSeo(); renderMeta();
+      });
+  }
+
+  /* ---------------- Sidebar nav ---------------- */
+  document.querySelectorAll("#sideNav button[data-view]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var view = b.getAttribute("data-view");
+      if (view === "editor") { newVideo(); return; }
+      show(view);
+    });
+  });
+  $("hamb").addEventListener("click", function () { $("sideNav").classList.toggle("open"); });
+
+  /* ---------------- Gate ---------------- */
+  function gateError(text) {
+    var m = $("gateMsg");
+    m.textContent = text; m.style.display = "block";
+    $("gateCard").classList.remove("shake");
+    void $("gateCard").offsetWidth;
+    $("gateCard").classList.add("shake");
+  }
+  function unlock() {
     password = $("gatePass").value;
-    if (!password) { showMsg($("gateMsg"), "Enter the admin password.", false); return; }
+    if (!password) { gateError("Enter the admin password."); return; }
     $("gate").classList.add("hidden");
-    $("dash").classList.remove("hidden");
-    updatePreview();
-    loadVideos().catch(function(){ showMsg($("msg"), "Could not load videos.json.", false); });
+    $("app").classList.remove("hidden");
+    loadLocalDrafts();
+    applyDefaults();
+    refreshForm();
+    loadVideos().catch(function () { showMsg($("msg"), "Could not load videos.json.", false); });
+    var hash = (window.location.hash || "").replace("#", "");
+    if (TITLES[hash] || hash === "videos" || hash === "editor" || hash === "published" || hash === "drafts") {
+      if (hash === "editor") newVideo(); else show(hash);
+    }
   }
   $("gateBtn").addEventListener("click", unlock);
-  $("gatePass").addEventListener("keydown", function(e){ if (e.key === "Enter") unlock(); });
+  $("gatePass").addEventListener("keydown", function (e) { if (e.key === "Enter") unlock(); });
+  $("gateEye").addEventListener("click", function () {
+    var p = $("gatePass");
+    p.type = p.type === "password" ? "text" : "password";
+  });
+  $("logoutBtn").addEventListener("click", function () { window.location.reload(); });
+
+  /* Test handle (used by the automated smoke test only). */
+  window.__vt = {
+    scoreVideo: scoreVideo, scoreVideoData: scoreVideoData,
+    getVideos: function () { return videos; },
+    getPassword: function () { return password; },
+    show: show, counts: counts
+  };
 })();
 </script>
 </body>
