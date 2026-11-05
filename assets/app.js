@@ -1,4 +1,8 @@
 /* VidTheme — front-end app.
+   Styling is the reference CSS, used verbatim in index.html
+   (Verdana, #D0D3D4 page, fixed #212121 navbar, .thumbnail 1188px,
+   float-based .thumb cards, Bootstrap-style pagination, .toptitle,
+   .tags/.tagsstyle, .related, .player embed structure).
    Videos are NOT embedded in this file. They are fetched from
    videos.json on GitHub raw on every load (cache-buster), with a
    fallback to the local videos.json, so a new video published via
@@ -8,7 +12,7 @@
      /page/02.html                  homepage, page 2
      /video/<slug>-<id>.html        video page
      /tags/<slug>.html              tag page (?p=2 for page 2)
-     /search?q=<query>              search results (?p=2 …)
+     /search?q=<query>              search results (?p=2 ...)
      /terms, /privacy, /contact, /dmca
    The Pages Function functions/[[path]].js serves index.html for
    these paths, so a direct visit / refresh works too. */
@@ -93,14 +97,14 @@
       });
   }
 
-  /* Brand row — COLOURED TEXT BUTTONS (not images), one per tag:
-     ~95x50, vertical gradient, white bold uppercase text, 4px gaps.
-     Colours sampled from the user's button screenshot. */
+  /* Channels row — COLOURED TEXT BUTTONS (not images), one per tag:
+     90x40, white bold uppercase centred text. Colours sampled from
+     the user's button screenshot. */
   brandRow.innerHTML = TAGS.map(function (t) {
     return (
-      '<li><a class="brand-' + tagSlug(t) + '" href="' + tagUrl(t) + '" data-tag="' + esc(t) + '" aria-label="' + esc(t) + '" title="' + esc(t) + '">' +
+      '<div class="chan"><a class="brand-' + tagSlug(t) + '" href="' + tagUrl(t) + '" data-tag="' + esc(t) + '" aria-label="' + esc(t) + '" title="' + esc(t) + '">' +
       esc(t.toUpperCase()) +
-      "</a></li>"
+      "</a></div>"
     );
   }).join("");
 
@@ -115,21 +119,64 @@
   function adWide() { return '<div class="ad-slot wide" role="complementary" aria-label="Advertisement slot">Advertisement</div>'; }
   function adRect() { return '<div class="ad-slot rect" role="complementary" aria-label="Advertisement slot">Advertisement</div>'; }
 
-  /* ---------- Cards & pagination ---------- */
-  /* Reference card: .thumb_wrap > a.thumb_link (image + timer only) +
-     sibling .thumb_title strip OUTSIDE the link. Only the image is
-     clickable; the title strip is pale teal, one truncated line. */
+  /* ---------- Lazy-load for thumb images (reference behaviour) ----------
+     Before loading, an img has the placeholder src + data-lazy-src with
+     the real thumb. When it comes within ~300px of the viewport
+     (IntersectionObserver rootMargin), the real URL is swapped into src,
+     class "lazyloaded" is added and data-was-processed="true" is set,
+     then the image is unobserved. Without IntersectionObserver, all
+     pending images load immediately. Called after every grid render. */
+  var PLACEHOLDER_SRC =
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAJCAQAAACRI2S5AAAAEElEQVR42mNkIAAYRxWAAQAG9gAKqv6+AwAAAABJRU5ErkJggg==";
+
+  function loadLazyImage(img) {
+    var src = img.getAttribute("data-lazy-src");
+    if (!src) return;
+    img.setAttribute("src", src);
+    if (img.classList && img.classList.add) img.classList.add("lazyloaded");
+    else img.setAttribute("class", (img.getAttribute("class") || "") + " lazyloaded");
+    img.setAttribute("data-was-processed", "true");
+  }
+
+  var lazyObserver = null;
+  function observeLazyImages() {
+    var imgs = document.querySelectorAll("img.img_prev[data-lazy-src]:not([data-was-processed])");
+    var i;
+    if (typeof IntersectionObserver === "undefined") {
+      for (i = 0; i < imgs.length; i++) loadLazyImage(imgs[i]);
+      return;
+    }
+    if (!lazyObserver) {
+      lazyObserver = new IntersectionObserver(function (entries) {
+        for (var j = 0; j < entries.length; j++) {
+          if (entries[j].isIntersecting) {
+            loadLazyImage(entries[j].target);
+            lazyObserver.unobserve(entries[j].target);
+          }
+        }
+      }, { rootMargin: "300px 0px", threshold: 0 });
+    }
+    for (i = 0; i < imgs.length; i++) lazyObserver.observe(imgs[i]);
+  }
+
+  /* ---------- Cards & pagination (reference structure) ----------
+     Card: <li class="thumb"><div class="thumb_wrap">
+       <a class="thumb_link" href="/video/<slug>-<id>.html">
+         <div class="thumb_img"><img class="img_prev" ...>
+         <div class="timer">mm:ss</div></div></a>
+       <div class="thumb_title">title</div></div></li>
+     Only the image is clickable; the title strip sits OUTSIDE the link. */
   function cardHtml(v) {
     return (
-      '<div class="thumb_wrap">' +
+      '<li class="thumb"><div class="thumb_wrap">' +
         '<a href="' + videoUrl(v) + '" class="thumb_link" title="' + esc(v.title) + '">' +
           '<div class="thumb_img">' +
-            '<img class="img_prev" src="' + esc(v.thumb) + '" alt="' + esc(v.title) + '" loading="lazy" width="100%" height="auto" />' +
+            '<img class="img_prev" src="' + PLACEHOLDER_SRC + '" alt="' + esc(v.title) + '" width="100%" height="auto" data-lazy-src="' + esc(v.thumb) + '" />' +
             '<div class="timer">' + esc(v.duration) + "</div>" +
           "</div>" +
         "</a>" +
         '<div class="thumb_title">' + esc(v.title) + "</div>" +
-      "</div>"
+      "</div></li>"
     );
   }
 
@@ -168,15 +215,21 @@
     return out;
   }
 
+  /* Bootstrap-style pagination from the reference CSS:
+     <div class="pager"><ul class="pagination">
+       <li class="active"><a>1</a></li>
+       <li><a href="/page/02.html">2</a></li> ...
+       <li class="disabled"><a>.</a></li>
+       <li><a href="/page/11.html">11</a></li></ul></div> */
   function paginationHtml(current, total, hrefFor) {
     if (total <= 1) return "";
-    var html = '<nav class="pagination" aria-label="Pages">';
+    var html = '<div class="pager"><ul class="pagination" aria-label="Pages">';
     pageList(current, total).forEach(function (p) {
-      if (p === ".") html += '<span class="dots" aria-hidden="true">.</span>';
-      else if (p === current) html += '<span class="current" aria-current="page">' + p + "</span>";
-      else html += '<a href="' + hrefFor(p) + '" aria-label="Page ' + p + '">' + p + "</a>";
+      if (p === ".") html += '<li class="disabled"><a>.</a></li>';
+      else if (p === current) html += '<li class="active"><a>' + p + "</a></li>";
+      else html += '<li><a href="' + hrefFor(p) + '" aria-label="Page ' + p + '">' + p + "</a></li>";
     });
-    return html + "</nav>";
+    return html + "</ul></div>";
   }
 
   function gridPage(list, page) {
@@ -192,20 +245,27 @@
     return Math.min(page, t);
   }
 
-  function headingBar(text, left) {
-    return '<div class="heading-bar' + (left ? " left" : "") + '"><div class="wrap"><h1>' + esc(text) + "</h1></div></div>";
+  /* .toptitle from the reference: homepage/tag/search titles are
+     centred (inline style from the reference HTML); the video-page
+     title is left-aligned with margin-top 5px. */
+  function toptitle(text, center) {
+    return '<div class="toptitle"' +
+      (center ? ' style="text-align:center;margin:0px 5px 5px 5px;"' : ' style="margin-top:5px;"') +
+      "><h1>" + esc(text) + "</h1></div>";
   }
 
+  /* Reference homepage order: title, ad(100), pager, grid, pager,
+     ad(250), ad(100). */
   function renderGridInto(list, page, hrefFor) {
-    if (!list.length) return '<div class="wrap"><p class="empty-note">No videos found.</p></div>';
+    if (!list.length) return '<p class="empty-note">No videos found.</p>';
     var cards = gridPage(list, page).map(cardHtml).join("");
     return (
-      '<div class="wrap">' + adWide() + "</div>" +
-      '<div class="wrap">' + paginationHtml(page, totalPages(list), hrefFor) + "</div>" +
-      '<div class="wrap"><div class="grid">' + cards + "</div></div>" +
-      '<div class="wrap">' + paginationHtml(page, totalPages(list), hrefFor) + "</div>" +
-      '<div class="wrap">' + adRect() + "</div>" +
-      '<div class="wrap">' + adWide() + "</div>"
+      adWide() +
+      paginationHtml(page, totalPages(list), hrefFor) +
+      '<div class="thumbs"><ul>' + cards + "</ul></div>" +
+      paginationHtml(page, totalPages(list), hrefFor) +
+      adRect() +
+      adWide()
     );
   }
 
@@ -216,8 +276,9 @@
     page = clampPage(page, list);
     document.title = "VidTheme";
     app.innerHTML =
-      headingBar("Latest Videos") +
+      toptitle("Latest Videos", true) +
       renderGridInto(list, page, function (p) { return p === 1 ? "/" : "/page/" + String(p).padStart(2, "0") + ".html"; });
+    observeLazyImages();
   }
 
   function tagView(tag, page) {
@@ -226,10 +287,11 @@
     page = clampPage(page, list);
     document.title = tag + " 2026 Videos — VidTheme";
     app.innerHTML =
-      headingBar(tag.toUpperCase() + " 2026 Videos") +
+      toptitle(tag.toUpperCase() + " 2026 Videos", true) +
       renderGridInto(list, page, function (p) {
         return tagUrl(tag) + (p === 1 ? "" : "?p=" + p);
       });
+    observeLazyImages();
   }
 
   function searchView(query, page) {
@@ -241,10 +303,11 @@
     page = clampPage(page, list);
     document.title = "Search: " + query + " — VidTheme";
     app.innerHTML =
-      headingBar('Search Results for "' + query + '"') +
+      toptitle('Search Results for "' + query + '"', true) +
       renderGridInto(list, page, function (p) {
         return "/search?q=" + encodeURIComponent(query) + (p === 1 ? "" : "&p=" + p);
       });
+    observeLazyImages();
   }
 
   var RELATED_PER_PAGE = 24; /* reference shows 24 related videos */
@@ -262,8 +325,10 @@
     markActiveTag(video.tag);
     document.title = video.title + " — VidTheme";
 
+    /* Reference tags: .tags > .tagsstyle > a, one box per tag,
+       no "Tags:" label, no border on the boxes. */
     var tagLinks = TAGS.map(function (t) {
-      return '<a href="' + tagUrl(t) + '">' + esc(t) + "</a>";
+      return '<div class="tagsstyle"><a href="' + tagUrl(t) + '">' + esc(t) + "</a></div>";
     }).join("");
 
     /* Player: the classic embed structure — a .player div holding
@@ -281,7 +346,7 @@
           '<div class="embed-responsive embed-responsive-16by9">This video could not be loaded. Please try again later.</div>' +
         "</div>";
 
-    /* Reference video-page order: ad(100), title bar, player, tags,
+    /* Reference video-page order: ad(100), title, player, tags,
        ads(250,100,250), Related heading, related grid (24), Show-more
        LINK button to the tag page, ads(250,100). */
     var rel = relatedList(video);
@@ -291,17 +356,16 @@
       '<a href="' + tagUrl(video.tag || TAGS[0]) + '">Show more related videos</a>' +
       "</button></div>";
     app.innerHTML =
-      '<div class="wrap">' + adWide() + "</div>" +
-      '<div class="wrap">' +
-        '<div class="video-title-bar"><h1>' + esc(video.title) + "</h1></div>" +
-        playerHtml +
-        '<div class="video-tags">' + tagLinks + "</div>" +
-        adRect() + adWide() + adRect() +
-      "</div>" +
-      '<div class="wrap"><div class="related-heading"><div class="related-label">Related Videos</div><div class="related-line"></div></div></div>' +
-      '<div class="wrap"><div class="grid">' + relatedCards + "</div>" +
+      adWide() +
+      toptitle(video.title, false) +
+      playerHtml +
+      '<div class="tags">' + tagLinks + "</div>" +
+      adRect() + adWide() + adRect() +
+      '<div class="related"><div>Related Videos</div></div>' +
+      '<div class="thumbs"><ul>' + relatedCards + "</ul></div>" +
       showMoreHtml +
-      adRect() + adWide() + "</div>";
+      adRect() + adWide();
+    observeLazyImages();
   }
 
   var INFO = {
@@ -342,10 +406,10 @@
     var page = INFO[key];
     document.title = page.title + " — VidTheme";
     app.innerHTML =
-      headingBar(page.title) +
-      '<div class="wrap"><div class="info-box">' +
+      toptitle(page.title, true) +
+      '<div class="info-box">' +
       page.body.map(function (p) { return "<p>" + esc(p) + "</p>"; }).join("") +
-      "</div></div>";
+      "</div>";
   }
 
   /* ---------- Share strip (mobile only): share the current page ---------- */
@@ -452,10 +516,10 @@
 
   window.addEventListener("popstate", route);
 
-  app.innerHTML = '<div class="wrap"><p class="empty-note">Loading videos…</p></div>';
+  app.innerHTML = '<p class="empty-note">Loading videos…</p>';
   loadVideos()
     .then(function () { route(); })
     .catch(function () {
-      app.innerHTML = '<div class="wrap"><p class="empty-note">Videos could not be loaded. Please try again later.</p></div>';
+      app.innerHTML = '<p class="empty-note">Videos could not be loaded. Please try again later.</p>';
     });
 })();
