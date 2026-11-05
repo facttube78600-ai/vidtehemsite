@@ -76,6 +76,11 @@ function validateVideo(v) {
   if (!tags.length) return "at least one category is required";
   for (const t of tags) if (!TAGS.includes(t)) return "unknown category: " + t;
   if (v.date && !/^\d{4}-\d{2}-\d{2}$/.test(v.date)) return "video.date must be YYYY-MM-DD";
+  if (v.status !== undefined && v.status !== "published" && v.status !== "draft") return "video.status must be published or draft";
+  if (v.seo_title !== undefined && (typeof v.seo_title !== "string" || v.seo_title.length > 70 || /[<>]/.test(v.seo_title))) return "video.seo_title is invalid (max 70 chars, no < >)";
+  if (v.meta_description !== undefined && (typeof v.meta_description !== "string" || v.meta_description.length > 180 || /[<>]/.test(v.meta_description))) return "video.meta_description is invalid (max 180 chars, no < >)";
+  if (v.meta_keywords !== undefined && (typeof v.meta_keywords !== "string" || v.meta_keywords.length > 500 || /[<>]/.test(v.meta_keywords))) return "video.meta_keywords is invalid (max 500 chars, no < >)";
+  if (v.focus_keyword !== undefined && (typeof v.focus_keyword !== "string" || v.focus_keyword.length > 100 || /[<>]/.test(v.focus_keyword))) return "video.focus_keyword is invalid (max 100 chars, no < >)";
   return null;
 }
 
@@ -91,6 +96,11 @@ function normalise(v) {
     tags,
     category: v.category || tags[0] || "",
     date: v.date || new Date().toISOString().slice(0, 10),
+    status: v.status === "draft" ? "draft" : "published",
+    seo_title: (v.seo_title || "").trim(),
+    meta_description: (v.meta_description || "").trim(),
+    meta_keywords: (v.meta_keywords || "").trim(),
+    focus_keyword: (v.focus_keyword || "").trim(),
   };
 }
 
