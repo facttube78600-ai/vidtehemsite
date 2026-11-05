@@ -83,6 +83,7 @@
   var HOME_DESC = "VidTheme — browse free videos by category. Nature, Travel, Food, Ocean Life, Mountains, City Life, Winter and Sky videos, all in one place.";
   var HOME_KEYWORDS = "vidtheme, nature videos, travel videos, food videos, ocean life videos, mountain videos, city life videos, winter videos, sky videos, free videos";
   var HOME_OG_IMAGE = SITE_URL + "/assets/og-image.svg";
+  var HOME_OG_IMAGE_ALT = "VidTheme — free videos by category";
 
   /* ---------- Site settings (site-settings.json) ----------
      Same fetch pattern as videos.json: GitHub raw first (fresh
@@ -109,6 +110,7 @@
     if (SETTINGS.siteDescription) HOME_DESC = SETTINGS.siteDescription;
     if (SETTINGS.siteKeywords) HOME_KEYWORDS = SETTINGS.siteKeywords;
     if (SETTINGS.ogImage) HOME_OG_IMAGE = absUrl(SETTINGS.ogImage);
+    if (SETTINGS.ogImageAlt) HOME_OG_IMAGE_ALT = SETTINGS.ogImageAlt;
     renderBrands();
     applyHeaderCode();
   }
@@ -158,14 +160,22 @@
   function durationSeconds(d) {
     if (!d) return 0;
     var p = String(d).split(":");
-    if (p.length !== 2) return 0;
-    var m = parseInt(p[0], 10), s = parseInt(p[1], 10);
-    if (isNaN(m) || isNaN(s)) return 0;
-    return m * 60 + s;
+    if (p.length === 2) {
+      var m = parseInt(p[0], 10), s = parseInt(p[1], 10);
+      if (isNaN(m) || isNaN(s)) return 0;
+      return m * 60 + s;
+    }
+    if (p.length === 3) {
+      var h = parseInt(p[0], 10), m2 = parseInt(p[1], 10), s2 = parseInt(p[2], 10);
+      if (isNaN(h) || isNaN(m2) || isNaN(s2)) return 0;
+      return h * 3600 + m2 * 60 + s2;
+    }
+    return 0;
   }
   function isoDuration(d) {
     var total = durationSeconds(d);
-    return "PT" + Math.floor(total / 60) + "M" + (total % 60) + "S";
+    var h = Math.floor(total / 3600), m = Math.floor((total % 3600) / 60), s = total % 60;
+    return "PT" + (h ? h + "H" : "") + m + "M" + s + "S";
   }
   function upsertMeta(attr, key, content) {
     var el = document.querySelector(attr === "name" ? 'meta[name="' + key + '"]' : 'meta[property="' + key + '"]');
@@ -205,6 +215,7 @@
     upsertMeta("property", "og:title", o.ogTitle || o.title || HOME_TITLE);
     upsertMeta("property", "og:description", o.ogDescription || o.description || HOME_DESC);
     upsertMeta("property", "og:image", o.ogImage || HOME_OG_IMAGE);
+    upsertMeta("property", "og:image:alt", o.ogImageAlt || HOME_OG_IMAGE_ALT);
     upsertMeta("property", "og:type", o.ogType || "website");
     upsertMeta("property", "og:url", o.canonical || SITE_URL + "/");
     upsertMeta("name", "twitter:card", o.twitterCard || "summary_large_image");
@@ -246,6 +257,8 @@
       og_title: v.og_title || "",
       og_description: v.og_description || "",
       og_image: v.og_image || "",
+      thumb_alt: v.thumb_alt || "",
+      og_image_alt: v.og_image_alt || "",
       twitter_card: v.twitter_card === "summary" ? "summary" : "summary_large_image",
       canonical: v.canonical || ""
     };
@@ -297,7 +310,7 @@
     brandRow.innerHTML = brands.filter(function (b) { return b.enabled !== false; }).map(function (b) {
       var slug = tagSlug(b.label || "");
       var inner = b.image
-        ? '<img src="' + esc(absUrl(b.image)) + '" width="90" height="40" alt="' + esc(b.label) + '" />'
+        ? '<img src="' + esc(absUrl(b.image)) + '" width="90" height="40" alt="' + esc(b.alt || b.label) + '" />'
         : esc(String(b.label || "").toUpperCase());
       var cls = b.image ? "" : ' class="brand-' + slug + '"';
       return (
@@ -397,7 +410,7 @@
       '<li class="thumb"><div class="thumb_wrap">' +
         '<a href="' + videoUrl(v) + '" class="thumb_link" title="' + esc(v.title) + '">' +
           '<div class="thumb_img">' +
-            '<img class="img_prev" src="' + PLACEHOLDER_SRC + '" alt="' + esc(v.title) + '" width="100%" height="auto" data-lazy-src="' + esc(absUrl(v.thumb)) + '" />' +
+            '<img class="img_prev" src="' + PLACEHOLDER_SRC + '" alt="' + esc(v.thumb_alt || v.title) + '" width="100%" height="auto" data-lazy-src="' + esc(absUrl(v.thumb)) + '" />' +
             '<div class="timer">' + esc(v.duration) + "</div>" +
           "</div>" +
         "</a>" +
@@ -601,6 +614,7 @@
       ogTitle: video.og_title || (vTitle + " | VidTheme"),
       ogDescription: video.og_description || vDesc,
       ogImage: vOgImg,
+      ogImageAlt: video.og_image_alt || video.thumb_alt || video.title,
       ogVideo: { type: "text/html", width: 1280, height: 720, duration: durationSeconds(video.duration) },
       twitterCard: video.twitter_card || "summary_large_image",
       twitterImage: vOgImg,
