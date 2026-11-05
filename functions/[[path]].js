@@ -59,14 +59,22 @@ function absUrl(u) {
 function durationSeconds(d) {
   if (!d) return 0;
   var p = String(d).split(":");
-  if (p.length !== 2) return 0;
-  var m = parseInt(p[0], 10), s = parseInt(p[1], 10);
-  if (isNaN(m) || isNaN(s)) return 0;
-  return m * 60 + s;
+  if (p.length === 2) {
+    var m = parseInt(p[0], 10), s = parseInt(p[1], 10);
+    if (isNaN(m) || isNaN(s)) return 0;
+    return m * 60 + s;
+  }
+  if (p.length === 3) {
+    var h = parseInt(p[0], 10), m2 = parseInt(p[1], 10), s2 = parseInt(p[2], 10);
+    if (isNaN(h) || isNaN(m2) || isNaN(s2)) return 0;
+    return h * 3600 + m2 * 60 + s2;
+  }
+  return 0;
 }
 function isoDuration(d) {
   var total = durationSeconds(d);
-  return "PT" + Math.floor(total / 60) + "M" + (total % 60) + "S";
+  var h = Math.floor(total / 3600), m = Math.floor((total % 3600) / 60), s = total % 60;
+  return "PT" + (h ? h + "H" : "") + m + "M" + s + "S";
 }
 
 /* Site-wide values from site-settings.json, with the built-in
@@ -77,6 +85,7 @@ function siteMeta(settings) {
     description: (settings && settings.siteDescription) || HOME_DESC,
     keywords: (settings && settings.siteKeywords) || HOME_KEYWORDS,
     ogImage: absUrl((settings && settings.ogImage) || HOME_OG_IMAGE),
+    ogImageAlt: (settings && settings.ogImageAlt) || "",
     twitterCard: (settings && settings.twitterCard) || "summary_large_image",
     headerCode: (settings && settings.headerCode) || "",
   };
@@ -97,6 +106,7 @@ function headBlock(o) {
   lines.push('    <meta property="og:title" content="' + esc(o.ogTitle || o.title) + '" />');
   lines.push('    <meta property="og:description" content="' + esc(o.ogDescription || o.description) + '" />');
   lines.push('    <meta property="og:image" content="' + esc(o.ogImage || HOME_OG_IMAGE) + '" />');
+  lines.push('    <meta property="og:image:alt" content="' + esc(o.ogImageAlt || "VidTheme — free videos by category") + '" />');
   lines.push('    <meta property="og:type" content="' + esc(o.ogType || "website") + '" />');
   lines.push('    <meta property="og:url" content="' + esc(o.canonical) + '" />');
   if (o.ogVideo) {
@@ -169,6 +179,7 @@ function videoMeta(v, site) {
     ogTitle: v.og_title || vTitle + " | VidTheme",
     ogDescription: v.og_description || vDesc,
     ogImage: vOgImg,
+    ogImageAlt: v.og_image_alt || v.thumb_alt || v.title,
     ogVideo: { duration: durationSeconds(v.duration) },
     twitterCard: v.twitter_card === "summary" ? "summary" : "summary_large_image",
     twitterImage: vOgImg,
@@ -194,6 +205,7 @@ function homeMeta(site) {
     canonical: SITE_URL + "/",
     ogType: "website",
     ogImage: site.ogImage,
+    ogImageAlt: site.ogImageAlt,
     twitterCard: site.twitterCard,
   };
 }
@@ -206,6 +218,7 @@ function tagMeta(tag, page, site) {
     canonical: SITE_URL + "/tags/" + slugify(tag) + ".html" + (page > 1 ? "?p=" + page : ""),
     ogType: "website",
     ogImage: site.ogImage,
+    ogImageAlt: site.ogImageAlt,
     twitterCard: site.twitterCard,
   };
 }
@@ -218,6 +231,7 @@ function pageMeta(n, site) {
     canonical: SITE_URL + "/page/" + String(n).padStart(2, "0") + ".html",
     ogType: "website",
     ogImage: site.ogImage,
+    ogImageAlt: site.ogImageAlt,
     twitterCard: site.twitterCard,
   };
 }
@@ -231,6 +245,7 @@ function searchMeta(q, site) {
     robots: "noindex, follow",
     ogType: "website",
     ogImage: site.ogImage,
+    ogImageAlt: site.ogImageAlt,
     twitterCard: site.twitterCard,
   };
 }
