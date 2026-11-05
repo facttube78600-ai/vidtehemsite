@@ -48,6 +48,7 @@
   .preview { max-width:300px; margin-top:10px; background:#fff; color:#1a1a1a; border:1px solid #d4d4d4; }
   .preview .thumb { display:block; position:relative; aspect-ratio:16/9; overflow:hidden; background:#111; }
   .preview .thumb img { width:100%; height:100%; object-fit:cover; }
+  .preview .no-thumb { display:flex; align-items:center; justify-content:center; min-height:90px; padding:14px; background:repeating-linear-gradient(45deg,#1a1a1a,#1a1a1a 10px,#232323 10px,#232323 20px); color:#d0d3d4; font-size:13px; text-align:center; }
   .preview .duration { position:absolute; right:5px; bottom:5px; background:rgba(0,0,0,.75); color:#fff; font-size:12px; font-weight:bold; padding:1px 6px; border-radius:2px; }
   .preview .strip { display:block; background:#82b5b3; color:#222426; font-weight:bold; font-size:14px; padding:7px 9px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .hidden { display:none !important; }
@@ -123,6 +124,8 @@
   .img-row { display:flex; gap:8px; align-items:center; }
   .img-row input { flex:1; margin:0; }
   .img-row .btn { white-space:nowrap; }
+  .img-clear { background:#fff; color:#dc2626; border:1px solid #fecaca; font-weight:bold; padding:8px 11px; border-radius:6px; cursor:pointer; font-size:14px; line-height:1; white-space:nowrap; }
+  .img-clear:hover { background:#fef2f2; }
   .up-msg { font-size:12px; color:#64748b; margin:6px 0 0; min-height:14px; }
   .up-msg.err { color:#b91c1c; }
   .sugg-wrap { position:relative; }
@@ -262,8 +265,8 @@
               <div class="sugg-wrap"><input type="text" id="fTagsInput" placeholder="e.g. waterfall, rainforest, river" autocomplete="off" /><div class="sugg-box" id="fTagsSugg"></div></div>
               <label for="fCategory">Main Category (drives the video URL)</label>
               <select id="fCategory"></select>
-              <label for="fThumb">Thumbnail URL (16:9 — local assets/thumbs/… or https://…)</label>
-              <div class="img-row"><input type="text" id="fThumb" placeholder="assets/thumbs/waterfall.svg" /><button class="btn" id="thumbUploadBtn" type="button">⬆ Upload</button><input type="file" id="thumbFile" accept="image/*" style="display:none" /></div>
+              <label for="fThumb">Thumbnail URL (16:9 — local assets/thumbs/… or https://…; empty = auto-generated SVG on Publish)</label>
+              <div class="img-row"><input type="text" id="fThumb" placeholder="Empty = auto-generated SVG on Publish" /><button class="btn" id="thumbUploadBtn" type="button">⬆ Upload</button><button class="img-clear" id="thumbClearBtn" type="button" title="Remove image">✕</button><input type="file" id="thumbFile" accept="image/*" style="display:none" /></div>
               <p class="up-msg" id="thumbUpMsg"></p>
               <label for="fThumbAlt">Thumbnail Alt Text — image SEO</label>
               <input type="text" id="fThumbAlt" maxlength="200" placeholder="e.g. Hidden waterfall in a green rainforest" />
@@ -280,7 +283,7 @@
               <label for="fOgDesc">OG Description</label>
               <textarea id="fOgDesc" rows="2" maxlength="300" placeholder="Defaults to the meta description"></textarea>
               <label for="fOgImg">OG Image URL</label>
-              <div class="img-row"><input type="text" id="fOgImg" placeholder="Defaults to the thumbnail — assets/thumbs/… or https://…" /><button class="btn" id="ogUploadBtn" type="button">⬆ Upload</button><input type="file" id="ogFile" accept="image/*" style="display:none" /></div>
+              <div class="img-row"><input type="text" id="fOgImg" placeholder="Defaults to the thumbnail — assets/thumbs/… or https://…" /><button class="btn" id="ogUploadBtn" type="button">⬆ Upload</button><button class="img-clear" id="ogClearBtn" type="button" title="Remove image">✕</button><input type="file" id="ogFile" accept="image/*" style="display:none" /></div>
               <p class="up-msg" id="ogUpMsg"></p>
               <label for="fOgImgAlt">OG Image Alt Text — image SEO</label>
               <input type="text" id="fOgImgAlt" maxlength="200" placeholder="e.g. Hidden waterfall in a green rainforest" />
@@ -351,7 +354,7 @@
           <label for="smKeywords">Site Keywords</label>
           <input type="text" id="smKeywords" />
           <label for="smOgImage">OG Image URL</label>
-          <div class="img-row"><input type="text" id="smOgImage" placeholder="https://vidtehemsite.pages.dev/assets/og-image.svg" /><button class="btn" id="smOgUploadBtn" type="button">⬆ Upload</button><input type="file" id="smOgFile" accept="image/*" style="display:none" /></div>
+          <div class="img-row"><input type="text" id="smOgImage" placeholder="https://vidtehemsite.pages.dev/assets/og-image.svg" /><button class="btn" id="smOgUploadBtn" type="button">⬆ Upload</button><button class="img-clear" id="smOgClearBtn" type="button" title="Remove image">✕</button><input type="file" id="smOgFile" accept="image/*" style="display:none" /></div>
           <p class="up-msg" id="smOgUpMsg"></p>
           <label for="smOgImageAlt">OG Image Alt Text — image SEO</label>
           <input type="text" id="smOgImageAlt" maxlength="200" placeholder="e.g. Free nature videos on VidTheme" />
@@ -816,9 +819,11 @@
 
   function updatePreview() {
     var v = readForm();
-    $("preview").innerHTML =
-      '<span class="thumb"><img src="' + esc(v.thumbnail || "assets/thumbs/waterfall.svg") + '" alt="" />' +
-      '<span class="duration">' + esc(v.duration || "0:00") + "</span></span>" +
+    var thumbHtml = v.thumbnail
+      ? '<span class="thumb"><img src="' + esc(v.thumbnail) + '" alt="" />' +
+        '<span class="duration">' + esc(v.duration || "0:00") + "</span></span>"
+      : '<span class="thumb no-thumb"><span>No image — an SVG thumbnail will be auto-generated on Publish</span></span>';
+    $("preview").innerHTML = thumbHtml +
       '<span class="strip">' + esc(v.title || "Video title") + "</span>";
   }
 
@@ -1323,6 +1328,30 @@
   bindImageUpload("ogUploadBtn", "ogFile", "fOgImg", "fOgImgAlt", "ogUpMsg");
   bindImageUpload("smOgUploadBtn", "smOgFile", "smOgImage", "smOgImageAlt", "smOgUpMsg");
 
+  /* ✕ button on an uploaded image: clears the URL + alt text so no
+     image is used (thumbnail: an SVG is auto-generated on Publish). */
+  function bindImageClear(btnId, fileId, urlInputId, altInputId, msgId, onClear) {
+    var btn = $(btnId);
+    if (!btn) return;
+    btn.addEventListener("click", function () {
+      var urlEl = $(urlInputId);
+      if (urlEl) {
+        urlEl.value = "";
+        urlEl.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+      var altEl = altInputId ? $(altInputId) : null;
+      if (altEl) altEl.value = "";
+      var file = fileId ? $(fileId) : null;
+      if (file) file.value = "";
+      var msgEl = msgId ? $(msgId) : null;
+      if (msgEl) { msgEl.textContent = ""; msgEl.classList.remove("err"); }
+      if (onClear) onClear();
+    });
+  }
+  bindImageClear("thumbClearBtn", "thumbFile", "fThumb", "fThumbAlt", "thumbUpMsg", function () { updatePreview(); updateSeo(); });
+  bindImageClear("ogClearBtn", "ogFile", "fOgImg", "fOgImgAlt", "ogUpMsg");
+  bindImageClear("smOgClearBtn", "smOgFile", "smOgImage", "smOgImageAlt", "smOgUpMsg");
+
   function renderAds() {
     $("adsList").innerHTML = ADS_PLACEMENTS.map(function (p) {
       var a = (settings.ads && settings.ads[p.key]) || { enabled: false, code: "" };
@@ -1372,7 +1401,7 @@
         '<div><label for="br-color-' + i + '">Button colour</label>' +
         '<input type="color" id="br-color-' + i + '" value="' + esc(b.color) + '" style="height:42px;padding:4px" /></div></div>' +
         '<label for="br-image-' + i + '">Image URL (empty = coloured text button)</label>' +
-        '<div class="img-row"><input type="text" id="br-image-' + i + '" value="' + esc(b.image) + '" placeholder="assets/brands/nature.png or https://…" /><button class="btn" id="br-up-' + i + '" type="button">⬆ Upload</button><input type="file" id="br-file-' + i + '" accept="image/*" style="display:none" /></div>' +
+        '<div class="img-row"><input type="text" id="br-image-' + i + '" value="' + esc(b.image) + '" placeholder="assets/brands/nature.png or https://…" /><button class="btn" id="br-up-' + i + '" type="button">⬆ Upload</button><button class="img-clear" id="br-clear-' + i + '" type="button" title="Remove image">✕</button><input type="file" id="br-file-' + i + '" accept="image/*" style="display:none" /></div>' +
         '<p class="up-msg" id="br-upmsg-' + i + '"></p>' +
         '<img id="br-prev-' + i + '" src="' + esc(b.image) + '" alt="" style="width:90px;height:40px;object-fit:cover;margin-top:8px;border-radius:4px;background:#000;' + (b.image ? "" : "display:none") + '" />' +
         '<label for="br-alt-' + i + '">Image Alt Text — image SEO</label>' +
@@ -1394,6 +1423,10 @@
         img.style.display = this.value ? "" : "none";
       });
       bindImageUpload("br-up-" + i, "br-file-" + i, "br-image-" + i, "br-alt-" + i, "br-upmsg-" + i);
+      bindImageClear("br-clear-" + i, "br-file-" + i, "br-image-" + i, "br-alt-" + i, "br-upmsg-" + i, function () {
+        var img = $("br-prev-" + i);
+        if (img) { img.src = ""; img.style.display = "none"; }
+      });
       $("br-link-" + i).addEventListener("change", function () {
         $("br-custom-wrap-" + i).style.display = this.value === "custom" ? "" : "none";
       });
