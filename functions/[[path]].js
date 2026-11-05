@@ -24,6 +24,15 @@ export async function onRequest(context) {
     return context.next();
   }
 
+  // Short admin URL: /admin serves the dashboard (admin.html).
+  if (path === "/admin") {
+    const res = await context.env.ASSETS.fetch(new URL("/admin.html", url));
+    return new Response(res.body, {
+      status: 200,
+      headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-cache" },
+    });
+  }
+
   const isPage =
     path === "/" ||
     /^\/page\/\d+\.html$/.test(path) ||
