@@ -170,6 +170,11 @@
       <button data-view="editor" class="sub">＋ Add New Video</button>
       <button data-view="published" class="sub">✓ Published</button>
       <button data-view="drafts" class="sub">📝 Drafts</button>
+      <div class="h">Site</div>
+      <button data-view="sitemeta">🌐 Site Meta</button>
+      <button data-view="ads">📢 Ads</button>
+      <button data-view="header">🧩 Header Code</button>
+      <button data-view="brands">🎨 Brand Row</button>
       <div class="h">SEO</div>
       <button data-view="seo">🎯 SEO Checker</button>
       <button data-view="meta">🏷 Meta Tags</button>
@@ -219,36 +224,50 @@
         <div class="ed">
           <div class="left">
             <div class="card">
+              <label for="fTitle">Title</label>
+              <input type="text" id="fTitle" placeholder="e.g. Hidden Waterfalls of the Rainforest" />
+              <label for="fSlug">Slug</label>
+              <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+                <input type="text" id="fSlug" placeholder="hidden-waterfalls-of-the-rainforest" readonly style="flex:1;min-width:220px" />
+                <label style="display:flex;align-items:center;gap:6px;margin:0;color:var(--text);font-weight:400;white-space:nowrap"><input type="checkbox" id="fSlugAuto" checked /> Auto slug from title</label>
+              </div>
+              <p class="muted" id="urlPreview" style="margin:6px 0 0;word-break:break-all"></p>
+              <label for="fEmbed">Embed URL (the iframe src for the player)</label>
+              <input type="url" id="fEmbed" placeholder="https://…/embed/…" />
               <div class="row">
-                <div>
-                  <label for="fTitle">Title</label>
-                  <input type="text" id="fTitle" placeholder="e.g. Hidden Waterfalls of the Rainforest" />
-                </div>
                 <div>
                   <label for="fDuration">Duration (mm:ss)</label>
                   <input type="text" id="fDuration" placeholder="12:34" />
-                </div>
-              </div>
-              <div class="row">
-                <div>
-                  <label for="fSlug">Slug (auto from title)</label>
-                  <input type="text" id="fSlug" placeholder="hidden-waterfalls-of-the-rainforest" />
                 </div>
                 <div>
                   <label for="fDate">Date</label>
                   <input type="date" id="fDate" />
                 </div>
               </div>
+              <label for="fKw">Meta Keywords (comma separated)</label>
+              <input type="text" id="fKw" placeholder="e.g. waterfalls, rainforest, nature" />
+              <label for="fTagsInput">Tags (comma separated)</label>
+              <input type="text" id="fTagsInput" placeholder="e.g. waterfall, rainforest, river" />
+              <label for="fCategory">Main Category (drives the video URL)</label>
+              <select id="fCategory"></select>
               <label for="fThumb">Thumbnail URL (16:9 — local assets/thumbs/… or https://…)</label>
               <input type="text" id="fThumb" placeholder="assets/thumbs/waterfall.svg" />
-              <label for="fEmbed">Embed URL (the iframe src for the player)</label>
-              <input type="url" id="fEmbed" placeholder="https://…/embed/…" />
-              <label>Category / tags</label>
-              <div class="checks" id="fTags"></div>
               <div id="previewBox">
                 <label>Live preview</label>
                 <div class="preview" id="preview"></div>
               </div>
+            </div>
+
+            <div class="card">
+              <h2>📣 Social Sharing (Open Graph / Twitter)</h2>
+              <label for="fOgTitle">OG Title</label>
+              <input type="text" id="fOgTitle" maxlength="200" placeholder="Defaults to the SEO title" />
+              <label for="fOgDesc">OG Description</label>
+              <textarea id="fOgDesc" rows="2" maxlength="300" placeholder="Defaults to the meta description"></textarea>
+              <label for="fOgImg">OG Image URL</label>
+              <input type="text" id="fOgImg" placeholder="Defaults to the thumbnail — assets/thumbs/… or https://…" />
+              <label for="fTwCard">Twitter Card</label>
+              <select id="fTwCard"><option value="summary_large_image">Large image</option><option value="summary">Summary (small image)</option></select>
             </div>
 
             <div class="card" id="seoCard">
@@ -262,21 +281,10 @@
               <label for="fMeta">Meta Description (0–160)</label>
               <textarea id="fMeta" rows="3" maxlength="180"></textarea>
               <span class="muted" id="cMeta">0 / 160</span>
-              <label for="fKw">Meta Keywords (comma separated)</label>
-              <input type="text" id="fKw" placeholder="e.g. waterfalls, rainforest, nature" />
               <label for="fFocus">Focus Keyword</label>
               <input type="text" id="fFocus" placeholder="e.g. hidden waterfalls rainforest" />
-              <h3>Social Sharing (Open Graph / Twitter)</h3>
-              <label for="fOgTitle">OG Title</label>
-              <input type="text" id="fOgTitle" maxlength="200" placeholder="Defaults to the SEO title" />
-              <label for="fOgDesc">OG Description</label>
-              <textarea id="fOgDesc" rows="2" maxlength="300" placeholder="Defaults to the meta description"></textarea>
-              <label for="fOgImg">OG Image URL</label>
-              <input type="text" id="fOgImg" placeholder="Defaults to the thumbnail — assets/thumbs/… or https://…" />
-              <label for="fTwCard">Twitter Card</label>
-              <select id="fTwCard"><option value="summary_large_image">Large image</option><option value="summary">Summary (small image)</option></select>
               <label for="fCanon">Canonical URL</label>
-              <input type="text" id="fCanon" placeholder="Auto: https://vidtehemsite.pages.dev/video/slug-id.html" />
+              <input type="text" id="fCanon" placeholder="Auto: https://vidtehemsite.pages.dev/nature/slug-id.html" />
               <h3>Social Preview</h3>
               <div class="serp" id="socialPrev"><div class="t" id="socTitle"></div><div class="u" id="socUrl"></div><div class="d" id="socDesc"></div></div>
               <h3>Google Preview</h3>
@@ -295,9 +303,11 @@
                 <label><input type="radio" name="fStatus" value="draft" /> Draft</label>
               </div>
               <p class="muted">Drafts are saved to GitHub too, but the public site never shows them until you Publish.</p>
+              <p class="muted" id="autosaveMsg"></p>
               <div style="display:grid; gap:8px; margin-top:12px">
                 <button class="btn-green" id="publishBtn" type="button" style="padding:14px;font-size:16px">🚀 Publish</button>
                 <button class="btn" id="draftBtn" type="button">💾 Save Draft</button>
+                <button class="btn-ghost" id="copyLinkBtn" type="button">🔗 Copy Editor Link</button>
                 <button class="btn-ghost" id="clearBtn" type="button">Clear form</button>
                 <button class="btn-ghost" id="exportBtn" type="button">⬇ Export videos.json</button>
               </div>
@@ -309,6 +319,61 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- ================= Site Meta ================= -->
+      <div id="v-sitemeta" class="view">
+        <h1>Site Meta</h1>
+        <div class="note">This sets the meta tags for the <b>whole live site</b> (homepage title, description, keywords, social sharing). It is separate from the device-local Default Meta in the Meta Tags view. Saving here writes <b>site-settings.json</b> to GitHub — the public site picks it up on its next load.</div>
+        <div class="card">
+          <label for="smTitle">Site Title</label>
+          <input type="text" id="smTitle" maxlength="70" />
+          <label for="smDesc">Site Description</label>
+          <textarea id="smDesc" rows="3" maxlength="180"></textarea>
+          <label for="smKeywords">Site Keywords</label>
+          <input type="text" id="smKeywords" />
+          <label for="smOgImage">OG Image URL</label>
+          <input type="text" id="smOgImage" placeholder="https://vidtehemsite.pages.dev/assets/og-image.svg" />
+          <img id="smOgPrev" alt="" style="max-width:300px;margin-top:10px;border-radius:8px;display:none" />
+          <label for="smTwCard">Twitter Card</label>
+          <select id="smTwCard"><option value="summary_large_image">Large image</option><option value="summary">Summary (small image)</option></select>
+          <div style="margin-top:16px"><button class="btn-green" id="smSaveBtn" type="button">💾 Save Site Meta</button></div>
+          <div class="msg" id="smMsg"></div>
+        </div>
+      </div>
+
+      <!-- ================= Ads ================= -->
+      <div id="v-ads" class="view">
+        <h1>Ads</h1>
+        <div class="note">One card per ad placement. <b>OFF</b> = the slot shows nothing. <b>ON with code</b> = the pasted code is shown. <b>ON without code</b> = the grey placeholder is shown. Paste your ad code (e.g. an AdSense unit) into the code box to turn an ad on.</div>
+        <div id="adsList"></div>
+        <button class="btn-green" id="adsSaveBtn" type="button">💾 Save Ads</button>
+        <div class="msg" id="adsMsg"></div>
+      </div>
+
+      <!-- ================= Header Code ================= -->
+      <div id="v-header" class="view">
+        <h1>Header Code</h1>
+        <div class="note"><b>Always ON</b> — this code is injected into the <b>&lt;head&gt;</b> of every page of the live site (Google Analytics, Search Console verification, etc.). It is <b>NOT</b> tied to the Ads on/off switches.</div>
+        <div class="card">
+          <label for="hdCode">Header code (HTML / JavaScript — goes into &lt;head&gt;)</label>
+          <textarea id="hdCode" rows="10" style="font-family:monospace;font-size:13px" placeholder="&lt;script async src=&quot;https://www.googletagmanager.com/gtag/js?id=G-XXXX&quot;&gt;&lt;/script&gt;"></textarea>
+          <div style="margin-top:16px"><button class="btn-green" id="hdSaveBtn" type="button">💾 Save Header Code</button></div>
+          <div class="msg" id="hdMsg"></div>
+        </div>
+        <div class="card">
+          <h2>Currently saved</h2>
+          <pre class="ld" id="hdPrev">— empty —</pre>
+        </div>
+      </div>
+
+      <!-- ================= Brand Row ================= -->
+      <div id="v-brands" class="view">
+        <h1>Brand Row</h1>
+        <div class="note">The row of 8 category buttons at the top of the public site. If an <b>image</b> is set, the slot shows the image; otherwise it shows the <b>coloured button</b> with the label. Each slot links to a tag page, the homepage, or a custom URL.</div>
+        <div id="brandsList"></div>
+        <button class="btn-green" id="brandsSaveBtn" type="button">💾 Save Brand Row</button>
+        <div class="msg" id="brandsMsg"></div>
       </div>
 
       <!-- ================= SEO Checker ================= -->
@@ -388,14 +453,17 @@
   var videos = [];              // server videos + local quick drafts, sorted by id
   var localDrafts = [];
   var editingId = null;
-  var slugTouched = false;
+  var editorKey = null;         // "edit-<id>" or "new-<uid>" — unique editor link
+  var autosaveTimer = null;
+  var lastAutosaveJson = "";
   var currentTab = "all";
 
-  var TITLES = { dash: "Dashboard", videos: "All Videos", editor: "Add New Video", seo: "SEO Checker", meta: "Meta Tags", settings: "Settings" };
+  var TITLES = { dash: "Dashboard", videos: "All Videos", editor: "Add New Video", sitemeta: "Site Meta", ads: "Ads", header: "Header Code", brands: "Brand Row", seo: "SEO Checker", meta: "Meta Tags", settings: "Settings" };
 
   var $ = function (id) { return document.getElementById(id); };
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function slugify(t) { return String(t).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""); }
+  function categorySlug(c) { return slugify(c || ""); }
   function showMsg(el, text, ok) { if (!el) return; el.textContent = text; el.className = "msg " + (ok ? "ok" : "err"); }
   function today() { return new Date().toISOString().slice(0, 10); }
   function statusOf(v) { return v.status === "draft" ? "draft" : "published"; }
@@ -407,6 +475,109 @@
   }
   function storeGet(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
   function storeSet(k, v) { try { window.localStorage.setItem(k, v); } catch (e) { /* storage unavailable */ } }
+
+  /* ---------------- Site settings (site-settings.json) ---------------- */
+  var SETTINGS_URL = "https://raw.githubusercontent.com/facttube78600-ai/vidtehemsite/main/site-settings.json";
+  var ADS_PLACEMENTS = [
+    { key: "homeTop", label: "Homepage — top (300x100, above grid)" },
+    { key: "homeBottomRect", label: "Homepage — below grid (300x250)" },
+    { key: "homeBottomWide", label: "Homepage — below grid (300x100)" },
+    { key: "videoTop", label: "Video page — top (300x100)" },
+    { key: "videoMidRect1", label: "Video page — middle 1 (300x250)" },
+    { key: "videoMidWide", label: "Video page — middle (300x100)" },
+    { key: "videoMidRect2", label: "Video page — middle 2 (300x250)" },
+    { key: "videoBottomRect", label: "Video page — bottom (300x250)" },
+    { key: "videoBottomWide", label: "Video page — bottom (300x100)" }
+  ];
+  var BRAND_DEFAULTS = [
+    { label: "Nature", color: "#24975c", link: "/tags/nature.html" },
+    { label: "Travel", color: "#3277d6", link: "/tags/travel.html" },
+    { label: "Food", color: "#d36e2e", link: "/tags/food.html" },
+    { label: "Ocean Life", color: "#1f9aa6", link: "/tags/ocean-life.html" },
+    { label: "Mountains", color: "#6c5ca1", link: "/tags/mountains.html" },
+    { label: "City Life", color: "#3c4451", link: "/tags/city-life.html" },
+    { label: "Winter", color: "#5e93b5", link: "/tags/winter.html" },
+    { label: "Sky", color: "#a13c8e", link: "/tags/sky.html" }
+  ];
+  function defaultSettings() {
+    var ads = {};
+    ADS_PLACEMENTS.forEach(function (p) { ads[p.key] = { enabled: false, code: "" }; });
+    return {
+      siteTitle: "VidTheme: Free HD Videos by Category",
+      siteDescription: "VidTheme — browse free videos by category. Nature, Travel, Food, Ocean Life, Mountains, City Life, Winter and Sky videos, all in one place.",
+      siteKeywords: "vidtheme, nature videos, travel videos, food videos, ocean life videos, mountain videos, city life videos, winter videos, sky videos, free videos",
+      ogImage: "https://vidtehemsite.pages.dev/assets/og-image.svg",
+      twitterCard: "summary_large_image",
+      headerCode: "",
+      ads: ads,
+      brands: BRAND_DEFAULTS.map(function (b) { return { label: b.label, color: b.color, image: "", link: b.link, enabled: true }; })
+    };
+  }
+  var settings = defaultSettings();
+  function mergeSettings(data) {
+    var d = defaultSettings();
+    if (!data || typeof data !== "object") return d;
+    ["siteTitle", "siteDescription", "siteKeywords", "ogImage", "twitterCard", "headerCode"].forEach(function (k) {
+      if (typeof data[k] === "string") d[k] = data[k];
+    });
+    if (data.ads && typeof data.ads === "object") {
+      Object.keys(d.ads).forEach(function (k) {
+        if (data.ads[k] && typeof data.ads[k] === "object") {
+          d.ads[k] = { enabled: !!data.ads[k].enabled, code: typeof data.ads[k].code === "string" ? data.ads[k].code : "" };
+        }
+      });
+    }
+    if (Array.isArray(data.brands) && data.brands.length) {
+      d.brands = d.brands.map(function (b, i) {
+        var s = data.brands[i] || {};
+        return {
+          label: typeof s.label === "string" && s.label ? s.label : b.label,
+          color: typeof s.color === "string" && s.color ? s.color : b.color,
+          image: typeof s.image === "string" ? s.image : "",
+          link: typeof s.link === "string" && s.link ? s.link : b.link,
+          enabled: s.enabled !== false
+        };
+      });
+    }
+    return d;
+  }
+  function loadSettings() {
+    return fetch(SETTINGS_URL + "?v=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw new Error("raw " + r.status); return r.json(); })
+      .catch(function () { return fetch("site-settings.json?v=" + Date.now()).then(function (r) { return r.json(); }); })
+      .then(function (data) { settings = mergeSettings(data); refreshSettingsViews(); })
+      .catch(function () { settings = defaultSettings(); refreshSettingsViews(); });
+  }
+  /* If a settings view is open while settings are still loading, refresh
+     it once they arrive — unless the user has already typed in it. */
+  var settingsDirty = { sitemeta: false, ads: false, header: false, brands: false };
+  function refreshSettingsViews() {
+    var cur = document.querySelector(".view.on");
+    if (!cur) return;
+    if (cur.id === "v-sitemeta" && !settingsDirty.sitemeta) renderSiteMeta();
+    else if (cur.id === "v-ads" && !settingsDirty.ads) renderAds();
+    else if (cur.id === "v-header" && !settingsDirty.header) renderHeader();
+    else if (cur.id === "v-brands" && !settingsDirty.brands) renderBrands();
+  }
+  ["v-sitemeta", "v-ads", "v-header", "v-brands"].forEach(function (vid) {
+    var key = vid.slice(2);
+    $(vid).addEventListener("input", function () { settingsDirty[key] = true; });
+    $(vid).addEventListener("change", function () { settingsDirty[key] = true; });
+  });
+  function saveSettings(msgEl) {
+    showMsg(msgEl, "Saving…", true);
+    return fetch("/api/publish", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: password, settings: settings })
+    }).then(function (r) { return r.json().then(function (j) { return { status: r.status, body: j }; }); })
+    .then(function (res) {
+      if (res.status !== 200) throw new Error(res.body.error || ("Save failed (HTTP " + res.status + ")"));
+      showMsg(msgEl, "Saved. " + (res.body.message || ""), true);
+      return true;
+    })
+    .catch(function (err) { showMsg(msgEl, err.message, false); return false; });
+  }
 
   /* ---------------- SEO scoring (shared by editor + checker) ----------------
      8 checks, 12.5 points each. Input shape:
@@ -423,7 +594,7 @@
       { label: "Focus keyword in slug", pass: !!kw && (d.slug || "").toLowerCase().indexOf(kw.replace(/[^a-z0-9]+/g, "-")) !== -1 },
       { label: "Thumbnail set", pass: !!(d.thumb || "").trim() },
       { label: "Embed URL set", pass: !!(d.embed || "").trim() },
-      { label: "At least one category picked", pass: (d.tags || []).length > 0 }
+      { label: "Main category picked", pass: !!(d.category || "").trim() }
     ];
     var passed = checks.filter(function (c) { return c.pass; }).length;
     return { score: Math.round(passed * 12.5), checks: checks };
@@ -438,7 +609,8 @@
       slug: v.slug || "",
       thumb: v.thumbnail || v.thumb || "",
       embed: v.embed_url || "",
-      tags: v.tags || (v.category ? [v.category] : [])
+      tags: v.tags || (v.category ? [v.category] : []),
+      category: v.category || ""
     });
   }
 
@@ -457,10 +629,21 @@
     $("pageTitle").textContent = TITLES[real] || "Dashboard";
     if (real === "videos") renderVideos();
     if (real === "dash") { renderStats(); renderRecent(); }
+    if (real === "sitemeta") renderSiteMeta();
+    if (real === "ads") renderAds();
+    if (real === "header") renderHeader();
+    if (real === "brands") renderBrands();
     if (real === "seo") renderSeo();
     if (real === "meta") renderMeta();
     $("sideNav").classList.remove("open");
-    try { if (window.history && window.history.replaceState) window.history.replaceState(null, "", "#" + view); } catch (e) { /* ignore */ }
+    try {
+      if (window.history && window.history.replaceState) {
+        // The editor keeps its own unique link (#edit-<id> / #new-<uid>);
+        // the generic "#"+view hash must not wipe it while editing.
+        if (real === "editor" && editorKey) window.history.replaceState(null, "", "#" + editorKey);
+        else window.history.replaceState(null, "", "#" + view);
+      }
+    } catch (e) { /* ignore */ }
     window.scrollTo(0, 0);
   }
 
@@ -496,7 +679,7 @@
   function rowHtml(v) {
     return "<tr>" +
       '<td><img class="thumb-mini" src="' + esc(v.thumbnail || v.thumb || "") + '" alt="" /></td>' +
-      "<td>" + esc(v.title) + "<br><span class='muted'>/" + esc(v.slug) + "-" + v.id + ".html</span></td>" +
+      "<td>" + esc(v.title) + "<br><span class='muted'>/" + esc(categorySlug(v.category)) + "/" + esc(v.slug) + "-" + v.id + ".html</span></td>" +
       "<td>" + esc(v.category || (v.tags || []).join(", ")) + "</td>" +
       "<td>" + esc(v.duration || "") + "</td>" +
       "<td>" + esc(v.date || "") + "</td>" +
@@ -560,17 +743,15 @@
   }
 
   /* ---------------- Editor ---------------- */
-  $("fTags").innerHTML = TAGS.map(function (t) {
-    return '<label><input type="checkbox" value="' + esc(t) + '" /> ' + esc(t) + "</label>";
+  $("fCategory").innerHTML = TAGS.map(function (t) {
+    return '<option value="' + esc(t) + '">' + esc(t) + "</option>";
   }).join("");
   $("fDate").value = today();
 
-  function checkedTags() {
-    return Array.prototype.slice.call(document.querySelectorAll("#fTags input:checked")).map(function (c) { return c.value; });
+  function parseTagsInput() {
+    return ($("fTagsInput").value || "").split(",").map(function (s) { return s.trim(); }).filter(function (s) { return !!s; });
   }
-  function setCheckedTags(tags) {
-    document.querySelectorAll("#fTags input").forEach(function (c) { c.checked = tags.indexOf(c.value) !== -1; });
-  }
+  function setTagsInput(tags) { $("fTagsInput").value = (tags || []).join(", "); }
   function statusRadio() {
     var r = document.querySelector('input[name="fStatus"]:checked');
     return r ? r.value : "published";
@@ -588,8 +769,8 @@
       duration: $("fDuration").value.trim(),
       thumbnail: $("fThumb").value.trim(),
       embed_url: $("fEmbed").value.trim(),
-      tags: checkedTags(),
-      category: checkedTags()[0] || "",
+      tags: parseTagsInput(),
+      category: $("fCategory").value,
       date: $("fDate").value || today(),
       status: statusOverride || statusRadio(),
       seo_title: $("fSeo").value.trim(),
@@ -622,7 +803,8 @@
       slug: v.slug,
       thumb: v.thumbnail,
       embed: v.embed_url,
-      tags: v.tags
+      tags: v.tags,
+      category: v.category
     };
     var res = scoreVideoData(d);
     $("scorebar").style.width = res.score + "%";
@@ -633,7 +815,8 @@
     }).join("");
     $("cSeo").textContent = v.seo_title.length + " / 60";
     $("cMeta").textContent = v.meta_description.length + " / 160";
-    var url = SITE_URL + "video/" + (v.slug || slugify(v.title || "video")) + "-" + v.id + ".html";
+    var url = SITE_URL + categorySlug(v.category) + "/" + (v.slug || slugify(v.title || "video")) + "-" + v.id + ".html";
+    $("urlPreview").textContent = "URL: " + url;
     $("serpTitle").textContent = d.seoTitle || "Video title";
     $("serpUrl").textContent = url;
     $("serpDesc").textContent = v.meta_description || storeGet(LS_DEFMETA) || "No meta description yet.";
@@ -651,34 +834,113 @@
     }, null, 2);
   }
 
-  function refreshForm() { updatePreview(); updateSeo(); }
+  function refreshForm() { updatePreview(); updateSeo(); scheduleAutosave(); }
 
   ["fTitle", "fDuration", "fThumb", "fEmbed"].forEach(function (id) { $(id).addEventListener("input", refreshForm); });
-  ["fSeo", "fMeta", "fKw", "fFocus", "fSlug", "fDate", "fOgTitle", "fOgDesc", "fOgImg", "fCanon"].forEach(function (id) { $(id).addEventListener("input", refreshForm); });
+  ["fSeo", "fMeta", "fKw", "fFocus", "fSlug", "fDate", "fOgTitle", "fOgDesc", "fOgImg", "fCanon", "fTagsInput"].forEach(function (id) { $(id).addEventListener("input", refreshForm); });
   $("fTwCard").addEventListener("change", refreshForm);
+  $("fCategory").addEventListener("change", refreshForm);
   $("fTitle").addEventListener("input", function () {
-    if (!slugTouched) $("fSlug").value = slugify($("fTitle").value);
+    if ($("fSlugAuto").checked) $("fSlug").value = slugify($("fTitle").value);
     refreshForm();
   });
-  $("fSlug").addEventListener("input", function () { slugTouched = true; });
-  document.querySelectorAll("#fTags input").forEach(function (c) { c.addEventListener("change", refreshForm); });
+  $("fSlugAuto").addEventListener("change", function () {
+    $("fSlug").readOnly = $("fSlugAuto").checked;
+    if ($("fSlugAuto").checked) $("fSlug").value = slugify($("fTitle").value);
+    refreshForm();
+  });
   document.querySelectorAll('input[name="fStatus"]').forEach(function (r) { r.addEventListener("change", refreshForm); });
+
+  /* ---------------- Editor autosave (1s debounce, localStorage) ----------------
+     Each editor has a unique key ("edit-<id>" or "new-<uid>") so a
+     refresh resumes the same editor with its unsaved changes. */
+  function fmtTime(d) {
+    return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0") + ":" + String(d.getSeconds()).padStart(2, "0");
+  }
+  function scheduleAutosave() {
+    if (!editorKey) return;
+    if (autosaveTimer) clearTimeout(autosaveTimer);
+    autosaveTimer = setTimeout(function () {
+      try {
+        var data = readForm();
+        // Never autosave a blank form (e.g. right after Publish cleared it).
+        if (!data.title && !data.embed_url) return;
+        data._slugAuto = $("fSlugAuto").checked;
+        var json = JSON.stringify(data);
+        if (json === lastAutosaveJson) return;
+        lastAutosaveJson = json;
+        data._savedAt = new Date().toISOString();
+        storeSet("vt_autosave_" + editorKey, JSON.stringify(data));
+        $("autosaveMsg").textContent = "Draft saved " + fmtTime(new Date());
+      } catch (e) { /* storage unavailable */ }
+    }, 1000);
+  }
+  function clearAutosave() {
+    if (editorKey) { try { window.localStorage.removeItem("vt_autosave_" + editorKey); } catch (e) { /* ignore */ } }
+    lastAutosaveJson = "";
+    $("autosaveMsg").textContent = "";
+  }
+  function fillFormFromData(d) {
+    if (!d || typeof d !== "object") return;
+    if (typeof d.id === "number" && d.id > 0) editingId = d.id;
+    $("formTitle").textContent = editingId ? "Edit video #" + editingId : "Add New Video";
+    $("fTitle").value = d.title || "";
+    $("fDuration").value = d.duration || "";
+    $("fSlug").value = d.slug || "";
+    $("fThumb").value = d.thumbnail || d.thumb || "";
+    $("fEmbed").value = d.embed_url || "";
+    $("fDate").value = d.date || today();
+    $("fSeo").value = d.seo_title || "";
+    $("fMeta").value = d.meta_description || "";
+    $("fKw").value = d.meta_keywords || "";
+    $("fFocus").value = d.focus_keyword || "";
+    $("fOgTitle").value = d.og_title || "";
+    $("fOgDesc").value = d.og_description || "";
+    $("fOgImg").value = d.og_image || "";
+    $("fTwCard").value = d.twitter_card === "summary" ? "summary" : "summary_large_image";
+    $("fCanon").value = d.canonical || "";
+    $("fTagsInput").value = Array.isArray(d.tags) ? d.tags.join(", ") : (d.tags || "");
+    $("fCategory").value = d.category || TAGS[0];
+    if (d._slugAuto !== undefined) { $("fSlugAuto").checked = !!d._slugAuto; $("fSlug").readOnly = !!d._slugAuto; }
+    if (d.status) setStatusRadio(d.status);
+    refreshForm();
+  }
+  function restoreAutosave() {
+    if (!editorKey) return false;
+    var raw = storeGet("vt_autosave_" + editorKey);
+    if (!raw) return false;
+    try {
+      var data = JSON.parse(raw);
+      fillFormFromData(data);
+      var probe = readForm();
+      probe._slugAuto = $("fSlugAuto").checked;
+      lastAutosaveJson = JSON.stringify(probe);
+      if (data._savedAt) {
+        var d = new Date(data._savedAt);
+        if (!isNaN(d.getTime())) $("autosaveMsg").textContent = "Restored autosaved draft from " + fmtTime(d);
+      }
+      return true;
+    } catch (e) { return false; }
+  }
 
   function clearForm() {
     editingId = null;
-    slugTouched = false;
     $("formTitle").textContent = "Add New Video";
-    ["fTitle", "fDuration", "fSlug", "fThumb", "fEmbed", "fSeo", "fMeta", "fKw", "fFocus", "fOgTitle", "fOgDesc", "fOgImg", "fCanon"].forEach(function (id) { $(id).value = ""; });
+    ["fTitle", "fDuration", "fSlug", "fThumb", "fEmbed", "fSeo", "fMeta", "fKw", "fFocus", "fOgTitle", "fOgDesc", "fOgImg", "fCanon", "fTagsInput"].forEach(function (id) { $(id).value = ""; });
     $("fTwCard").value = "summary_large_image";
     $("fDate").value = today();
-    setCheckedTags([]);
+    $("fCategory").value = TAGS[0];
+    $("fSlugAuto").checked = true;
+    $("fSlug").readOnly = true;
+    $("autosaveMsg").textContent = "";
     setStatusRadio("published");
     refreshForm();
   }
 
   function loadIntoForm(v, scrollToSeo) {
     editingId = v.id;
-    slugTouched = true;
+    editorKey = "edit-" + v.id;
+    lastAutosaveJson = "";
     $("formTitle").textContent = "Edit video #" + v.id;
     $("fTitle").value = v.title || "";
     $("fDuration").value = v.duration || "";
@@ -695,14 +957,24 @@
     $("fOgImg").value = v.og_image || "";
     $("fTwCard").value = v.twitter_card === "summary" ? "summary" : "summary_large_image";
     $("fCanon").value = v.canonical || "";
-    setCheckedTags(v.tags || (v.category ? [v.category] : []));
+    $("fSlugAuto").checked = false;
+    $("fSlug").readOnly = false;
+    $("fTagsInput").value = (v.tags || (v.category ? [v.category] : [])).join(", ");
+    $("fCategory").value = v.category || TAGS[0];
     setStatusRadio(statusOf(v));
     refreshForm();
+    restoreAutosave();
     show("editor");
     if (scrollToSeo && $("seoCard").scrollIntoView) $("seoCard").scrollIntoView();
   }
 
-  function newVideo() { clearForm(); show("editor"); }
+  function newVideo(uid) {
+    clearForm();
+    editorKey = "new-" + (uid || ("n" + Date.now().toString(36)));
+    lastAutosaveJson = "";
+    if (!restoreAutosave()) $("autosaveMsg").textContent = "";
+    show("editor");
+  }
 
   /* ---------------- Publish ---------------- */
   function publish(video, isDelete) {
@@ -725,17 +997,37 @@
     var v = readForm(status);
     if (!v.title) { showMsg($("msg"), "Title is required.", false); return; }
     if (!v.embed_url) { showMsg($("msg"), "Embed URL is required — the player iframe has nothing to load without it.", false); return; }
-    if (!v.tags.length) { showMsg($("msg"), "Pick at least one category.", false); return; }
+    if (!v.category) { showMsg($("msg"), "Pick a main category.", false); return; }
     if (v.local === undefined && editingId) {
       var existing = videos.filter(function (x) { return x.id === editingId; })[0];
       if (existing && existing.local) v.local = true;
     }
-    publish(v, false).then(function () { clearForm(); });
+    publish(v, false).then(function () { clearAutosave(); clearForm(); });
   }
 
   $("publishBtn").addEventListener("click", function () { saveVideo("published"); });
   $("draftBtn").addEventListener("click", function () { saveVideo("draft"); });
-  $("clearBtn").addEventListener("click", clearForm);
+  $("clearBtn").addEventListener("click", function () { clearAutosave(); clearForm(); });
+  $("copyLinkBtn").addEventListener("click", function () {
+    var url = window.location.href;
+    var prev = $("autosaveMsg").textContent;
+    function done() {
+      $("autosaveMsg").textContent = "Link copied";
+      setTimeout(function () { $("autosaveMsg").textContent = prev; }, 2000);
+    }
+    function fallback() {
+      var ta = document.createElement("textarea");
+      ta.value = url;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); } catch (e) { /* ignore */ }
+      document.body.removeChild(ta);
+      done();
+    }
+    if (window.navigator.clipboard && window.navigator.clipboard.writeText) {
+      window.navigator.clipboard.writeText(url).then(done, fallback);
+    } else { fallback(); }
+  });
   function exportJson() {
     var blob = new Blob([JSON.stringify(videos.filter(function (v) { return !v.local; }).map(function (v) {
       var o = {}; Object.keys(v).forEach(function (k) { if (k !== "local") o[k] = v[k]; }); return o;
@@ -827,6 +1119,115 @@
     showMsg($("defMsg"), "Defaults saved on this device.", true);
   });
 
+  /* ---------------- Site Meta / Ads / Header Code / Brand Row ---------------- */
+  function renderSiteMeta() {
+    $("smTitle").value = settings.siteTitle || "";
+    $("smDesc").value = settings.siteDescription || "";
+    $("smKeywords").value = settings.siteKeywords || "";
+    $("smOgImage").value = settings.ogImage || "";
+    $("smTwCard").value = settings.twitterCard === "summary" ? "summary" : "summary_large_image";
+    var prev = $("smOgPrev");
+    if (settings.ogImage) { prev.src = settings.ogImage; prev.style.display = ""; } else { prev.style.display = "none"; }
+  }
+  $("smSaveBtn").addEventListener("click", function () {
+    settings.siteTitle = $("smTitle").value.trim();
+    settings.siteDescription = $("smDesc").value.trim();
+    settings.siteKeywords = $("smKeywords").value.trim();
+    settings.ogImage = $("smOgImage").value.trim();
+    settings.twitterCard = $("smTwCard").value;
+    saveSettings($("smMsg")).then(function (ok) { if (ok) settingsDirty.sitemeta = false; });
+  });
+  $("smOgImage").addEventListener("input", function () {
+    var prev = $("smOgPrev");
+    if (this.value) { prev.src = this.value; prev.style.display = ""; } else { prev.style.display = "none"; }
+  });
+
+  function renderAds() {
+    $("adsList").innerHTML = ADS_PLACEMENTS.map(function (p) {
+      var a = (settings.ads && settings.ads[p.key]) || { enabled: false, code: "" };
+      return '<div class="card"><h2>' + esc(p.label) + "</h2>" +
+        '<label style="display:flex;align-items:center;gap:8px;margin:0 0 8px;color:var(--text);font-weight:400"><input type="checkbox" id="ad-on-' + p.key + '"' + (a.enabled ? " checked" : "") + " /> Show this ad (ON / OFF)</label>" +
+        '<label for="ad-code-' + p.key + '">Ad code</label>' +
+        '<textarea id="ad-code-' + p.key + '" rows="3" style="font-family:monospace;font-size:13px" placeholder="Paste ad code here, e.g. AdSense unit…">' + esc(a.code) + "</textarea></div>";
+    }).join("");
+  }
+  $("adsSaveBtn").addEventListener("click", function () {
+    ADS_PLACEMENTS.forEach(function (p) {
+      settings.ads[p.key] = { enabled: !!$("ad-on-" + p.key).checked, code: $("ad-code-" + p.key).value };
+    });
+    saveSettings($("adsMsg")).then(function (ok) { if (ok) settingsDirty.ads = false; });
+  });
+
+  function renderHeader() {
+    $("hdCode").value = settings.headerCode || "";
+    $("hdPrev").textContent = settings.headerCode
+      ? settings.headerCode.slice(0, 300) + (settings.headerCode.length > 300 ? "…" : "")
+      : "— empty —";
+  }
+  $("hdSaveBtn").addEventListener("click", function () {
+    settings.headerCode = $("hdCode").value;
+    saveSettings($("hdMsg")).then(function (ok) { if (ok) { settingsDirty.header = false; renderHeader(); } });
+  });
+
+  var LINK_OPTIONS = [
+    { value: "/tags/nature.html", label: "Nature tag page" },
+    { value: "/tags/travel.html", label: "Travel tag page" },
+    { value: "/tags/food.html", label: "Food tag page" },
+    { value: "/tags/ocean-life.html", label: "Ocean Life tag page" },
+    { value: "/tags/mountains.html", label: "Mountains tag page" },
+    { value: "/tags/city-life.html", label: "City Life tag page" },
+    { value: "/tags/winter.html", label: "Winter tag page" },
+    { value: "/tags/sky.html", label: "Sky tag page" },
+    { value: "/", label: "Homepage" },
+    { value: "custom", label: "Custom URL" }
+  ];
+  function renderBrands() {
+    $("brandsList").innerHTML = settings.brands.map(function (b, i) {
+      var known = LINK_OPTIONS.some(function (o) { return o.value === b.link; });
+      var selVal = known ? b.link : "custom";
+      return '<div class="card"><h2>Slot ' + (i + 1) + "</h2>" +
+        '<div class="row"><div><label for="br-label-' + i + '">Label</label>' +
+        '<input type="text" id="br-label-' + i + '" value="' + esc(b.label) + '" /></div>' +
+        '<div><label for="br-color-' + i + '">Button colour</label>' +
+        '<input type="color" id="br-color-' + i + '" value="' + esc(b.color) + '" style="height:42px;padding:4px" /></div></div>' +
+        '<label for="br-image-' + i + '">Image URL (empty = coloured text button)</label>' +
+        '<input type="text" id="br-image-' + i + '" value="' + esc(b.image) + '" placeholder="assets/brands/nature.png or https://…" />' +
+        '<img id="br-prev-' + i + '" src="' + esc(b.image) + '" alt="" style="width:90px;height:40px;object-fit:cover;margin-top:8px;border-radius:4px;background:#000;' + (b.image ? "" : "display:none") + '" />' +
+        '<label for="br-link-' + i + '">Link</label>' +
+        '<select id="br-link-' + i + '">' + LINK_OPTIONS.map(function (o) {
+          return '<option value="' + esc(o.value) + '"' + (o.value === selVal ? " selected" : "") + ">" + esc(o.label) + "</option>";
+        }).join("") + "</select>" +
+        '<div id="br-custom-wrap-' + i + '" style="' + (selVal === "custom" ? "" : "display:none") + '">' +
+        '<label for="br-custom-' + i + '">Custom URL</label>' +
+        '<input type="text" id="br-custom-' + i + '" value="' + esc(known ? "" : b.link) + '" placeholder="https://… or /path" /></div>' +
+        '<label style="display:flex;align-items:center;gap:8px;margin-top:12px;color:var(--text);font-weight:400"><input type="checkbox" id="br-on-' + i + '"' + (b.enabled ? " checked" : "") + " /> Enabled</label>" +
+        "</div>";
+    }).join("");
+    settings.brands.forEach(function (b, i) {
+      $("br-image-" + i).addEventListener("input", function () {
+        var img = $("br-prev-" + i);
+        img.src = this.value;
+        img.style.display = this.value ? "" : "none";
+      });
+      $("br-link-" + i).addEventListener("change", function () {
+        $("br-custom-wrap-" + i).style.display = this.value === "custom" ? "" : "none";
+      });
+    });
+  }
+  $("brandsSaveBtn").addEventListener("click", function () {
+    settings.brands = settings.brands.map(function (b, i) {
+      var linkSel = $("br-link-" + i).value;
+      return {
+        label: $("br-label-" + i).value.trim() || b.label,
+        color: $("br-color-" + i).value,
+        image: $("br-image-" + i).value.trim(),
+        link: linkSel === "custom" ? $("br-custom-" + i).value.trim() : linkSel,
+        enabled: !!$("br-on-" + i).checked
+      };
+    });
+    saveSettings($("brandsMsg")).then(function (ok) { if (ok) settingsDirty.brands = false; });
+  });
+
   /* ---------------- Load videos ---------------- */
   function loadVideos() {
     return fetch(GITHUB_RAW_URL + "?v=" + Date.now(), { cache: "no-store" })
@@ -866,11 +1267,20 @@
     loadLocalDrafts();
     applyDefaults();
     refreshForm();
-    loadVideos().catch(function () { showMsg($("msg"), "Could not load videos.json.", false); });
-    var hash = (window.location.hash || "").replace("#", "");
-    if (TITLES[hash] || hash === "videos" || hash === "editor" || hash === "published" || hash === "drafts") {
-      if (hash === "editor") newVideo(); else show(hash);
-    }
+    loadSettings();
+    loadVideos().then(function () {
+      var hash = (window.location.hash || "").replace("#", "");
+      if (hash.indexOf("edit-") === 0) {
+        var v = findVideo(parseInt(hash.slice(5), 10));
+        if (v) loadIntoForm(v); else show("videos");
+      } else if (hash.indexOf("new-") === 0) {
+        newVideo(hash.slice(4));
+      } else if (hash === "editor") {
+        newVideo();
+      } else if (TITLES[hash] || hash === "videos" || hash === "published" || hash === "drafts") {
+        show(hash);
+      }
+    }).catch(function () { showMsg($("msg"), "Could not load videos.json.", false); });
   }
   $("gateBtn").addEventListener("click", unlock);
   $("gatePass").addEventListener("keydown", function (e) { if (e.key === "Enter") unlock(); });
@@ -885,6 +1295,9 @@
     scoreVideo: scoreVideo, scoreVideoData: scoreVideoData,
     getVideos: function () { return videos; },
     getPassword: function () { return password; },
+    getSettings: function () { return settings; },
+    getEditorKey: function () { return editorKey; },
+    newVideo: newVideo, loadIntoForm: loadIntoForm, clearForm: clearForm,
     show: show, counts: counts
   };
 })();
