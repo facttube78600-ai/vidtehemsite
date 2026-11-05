@@ -8,297 +8,154 @@
     <link rel="icon" href="data:," />
     <title>VidTheme</title>
     <style>
-      :root {
-        --page-bg: #e9e9e9;       /* light grey page background (sampled from reference) */
-        --header-bg: #212121;     /* header bar behind the logo (sampled from reference logo) */
-        --bar-bg: #000000;        /* heading bars + footer: pure black (sampled from reference footer) */
-        --bar-text: #ffffff;
-        --accent: #ec008c;        /* magenta / pink: Search + play buttons */
-        --accent-dark: #c40074;
-        --strip-bg: #82b5b3;      /* card title strip teal (sampled from reference card strip) */
-        --strip-text: #222426;    /* near-black text on the strip (sampled) */
-        --page-blue: #0b5ed7;     /* pagination blue: active page fill */
-        --card-bg: #ffffff;
-        --body-text: #1a1a1a;
-        --muted-text: #555555;
-        --content-w: 1182px;
-      }
-
-      html { box-sizing: border-box; }
-      *, *::before, *::after { box-sizing: inherit; }
-      body {
-        margin: 0;
-        background: var(--page-bg);
-        color: var(--body-text);
-        font-family: Arial, Helvetica, sans-serif;
-        font-size: 15px;
-        line-height: 1.45;
-        /* No bottom padding on desktop: the share strip is mobile-only. */
-      }
-      a { color: var(--page-blue); }
-      img { display: block; max-width: 100%; }
-
-      .wrap { max-width: var(--content-w); margin: 0 auto; padding: 0 10px; }
-
-      /* ---------- Header ---------- */
-      .site-header { background: var(--header-bg); }
-      .site-header .wrap {
-        display: flex; align-items: center; gap: 16px;
-        padding-top: 12px; padding-bottom: 12px; flex-wrap: wrap;
-      }
-      /* Logo: plain bold white text on the dark header, far left —
-         one colour only, no icon, no coloured part (reference style). */
-      .logo {
-        color: #fff; text-decoration: none; font-weight: bold;
-        font-size: 20px; letter-spacing: .5px; line-height: 1; white-space: nowrap;
-      }
-      .search-form {
-        margin-left: auto; display: flex; gap: 0; flex: 0 1 460px; min-width: 240px;
-      }
-      .search-form input {
-        flex: 1; min-width: 0; border: 0; padding: 10px 12px;
-        font-size: 15px; font-family: inherit; background: #fff; color: #111;
-        border-radius: 3px 0 0 3px;
-      }
-      .search-form input:focus { outline: 2px solid var(--accent); outline-offset: -2px; }
-      .search-form button {
-        border: 0; cursor: pointer; padding: 10px 22px;
-        background: var(--accent); color: #fff; font-weight: bold;
-        font-size: 15px; font-family: inherit; border-radius: 0 3px 3px 0;
-      }
-      .search-form button:hover { background: var(--accent-dark); }
-
-      /* ---------- Brand row ---------- */
-      .brand-row { padding: 10px 0 2px; }
-      .brand-row ul {
-        list-style: none; margin: 0; padding: 0;
-        display: flex; flex-wrap: wrap; justify-content: center; gap: 4px;
-      }
-      /* Brand row: COLOURED TEXT BUTTONS (not images), ~95x50, vertical
-         gradient, white bold uppercase centred text, 4px gaps. */
-      .brand-row a {
-        display: flex; align-items: center; justify-content: center;
-        width: 95px; height: 50px; color: #fff; text-decoration: none;
-        font-weight: bold; font-size: 12px; line-height: 1.2; text-align: center;
-        text-transform: uppercase; padding: 0 4px;
-      }
-      .brand-row a:hover { opacity: .85; }
-      .brand-row a.active { box-shadow: inset 0 0 0 2px #fff; }
-      .brand-nature { background: linear-gradient(#2eac6b, #1d7a4d); }
-      .brand-travel { background: linear-gradient(#4a8fe0, #2563b8); }
-      .brand-food { background: linear-gradient(#e07f3e, #b85e22); }
-      .brand-ocean-life { background: linear-gradient(#2ab3bf, #177e88); }
-      .brand-mountains { background: linear-gradient(#7f6fb5, #574a85); }
-      .brand-city-life { background: linear-gradient(#4a5563, #2e343f); }
-      .brand-winter { background: linear-gradient(#74a8c6, #4a7a98); }
-      .brand-sky { background: linear-gradient(#b64fa2, #822f70); }
-
-      /* ---------- Ad slots (empty placeholders) ---------- */
-      .ad-slot {
-        margin: 7px auto; background: #f5f5f5; border: 1px dashed #b5b5b5;
-        color: #8a8a8a; display: flex; align-items: center; justify-content: center;
-        font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
-      }
-      .ad-slot.wide { width: 300px; max-width: 92vw; height: 100px; }
-      .ad-slot.rect { width: 300px; max-width: 92vw; height: 250px; }
-
-      /* ---------- Heading bars ---------- */
-      .heading-bar { background: var(--bar-bg); margin: 12px 0 14px; }
-      .heading-bar h1, .heading-bar h2 {
-        margin: 0; color: var(--bar-text); font-size: 21px; font-weight: bold;
-        text-align: center; padding: 10px 12px; line-height: 1.3;
-      }
-      .heading-bar.left h1, .heading-bar.left h2 { text-align: left; }
-
-      /* ---------- Pagination ---------- */
-      .pagination {
-        display: flex; flex-wrap: wrap; justify-content: center; gap: 4px;
-        margin: 12px 0;
-      }
-      .pagination a, .pagination span {
-        display: inline-block; min-width: 30px; text-align: center;
-        padding: 4px 8px; background: #fff; color: var(--page-blue);
-        border: 1px solid var(--page-blue); text-decoration: none;
-        font-weight: normal; font-size: 13px; line-height: 1.4; border-radius: 2px;
-      }
-      .pagination a:hover { background: #dcebfd; }
-      .pagination .current { background: var(--page-blue); color: #fff; border-color: var(--page-blue); }
-      .pagination .dots { background: transparent; border-color: transparent; color: #333; min-width: 0; padding-left: 2px; padding-right: 2px; }
-      .pagination .disabled { background: #f0f0f0; color: #a8a8a8; border-color: #c8c8c8; }
-
-      /* ---------- Video grid / cards ---------- */
-      .grid {
-        display: grid; gap: 8px;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-      }
-      @media (max-width: 1020px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-      @media (max-width: 640px)  { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-
-      /* Reference card structure: .thumb_wrap > a.thumb_link (image +
-         timer only) + sibling .thumb_title strip OUTSIDE the link. */
-      .thumb_wrap { min-width: 0; background: var(--card-bg); border: 1px solid #d4d4d4; }
-      .thumb_link { display: block; text-decoration: none; }
-      .thumb_img { display: block; position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: #111; }
-      .thumb_img img { width: 100%; height: 100%; object-fit: cover; }
-      .timer {
-        position: absolute; right: 5px; bottom: 5px;
-        background: rgba(0, 0, 0, .75); color: #fff;
-        font-size: 12px; font-weight: bold; padding: 1px 6px; border-radius: 2px;
-      }
-      .thumb_title {
-        display: block;
-        background: var(--strip-bg); color: var(--strip-text);
-        font-weight: bold; font-size: 14px; padding: 7px 9px;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      }
-
-      .empty-note {
-        background: #fff; border: 1px solid #d4d4d4; padding: 26px 16px;
-        text-align: center; color: var(--muted-text); font-size: 16px;
-      }
-
-      /* ---------- Video page ---------- */
-      /* Title bar above the player: content-column width only (NOT
-         full-viewport), 47px tall, #212121, white bold left text. */
-      .video-title-bar {
-        background: #212121; height: 47px;
-        display: flex; align-items: center;
-        margin: 0 0 2px;
-      }
-      .video-title-bar h1 {
-        margin: 0; color: #fff; font-size: 19px; font-weight: bold;
-        line-height: 1.2; padding-left: 10px;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      }
-      /* Player markup is the classic embed structure:
-         .player > .embed-responsive.embed-responsive-16by9
-         ("Loading Video..." text + iframe.embed-responsive-item inside) */
-      .player { background: #151616; padding: 4px; margin: 0 0 2px; }
-      .embed-responsive {
-        position: relative; display: flex; width: 100%;
-        align-items: center; justify-content: center;
-        overflow: hidden; background: #151616; color: #fff;
-        font-size: 19px; font-weight: bold; letter-spacing: .5px;
-        text-align: center; padding: 0;
-      }
-      .embed-responsive-16by9 { aspect-ratio: 16 / 9; }
-      .embed-responsive .embed-responsive-item {
-        position: absolute; top: 0; left: 0;
-        width: 100%; height: 100%; border: 0; background: #151616;
-      }
-      /* Tags directly below the player: NO "Tags:" label. A dark
-         #212121 strip across the full column, holding small boxed
-         (square-corner) links: #40403d fill, white regular text. */
-      .video-tags {
-        background: #212121; margin: 0 0 14px; padding: 6px 8px;
-        display: flex; flex-wrap: wrap; gap: 4px; align-items: center;
-      }
-      .video-tags a {
-        display: inline-flex; align-items: center; height: 22px;
-        padding: 0 8px; background: #40403d; color: #fff;
-        font-size: 12px; font-weight: normal; text-decoration: none;
-        border: 1px solid #b5b5b5; border-radius: 0; white-space: nowrap;
-      }
-      .video-tags a:hover { background: #55554f; }
-
-      /* Related Videos heading: NOT a full-width black bar. A small
-         magenta label box (113 x 25) with a 1px line in the same
-         colour spanning the full column, aligned with the label's
-         bottom edge (the line is the row directly below it). */
-      .related-heading { margin: 18px 0 14px; }
-      .related-heading .related-label {
-        display: inline-flex; align-items: center;
-        width: 113px; height: 25px; padding-left: 10px;
-        background: #ad1457; color: #fff;
-        font-size: 13px; font-weight: bold; line-height: 1;
-      }
-      .related-heading .related-line { height: 1px; background: #ad1457; }
-
-      /* "Show more related videos" — a LINK button to the tag page, not
-         a JS load-more: background #0088cc, radius 5px, white bold 14px. */
-      .loadbtn { text-align: center; margin: 18px 0 6px; }
-      .button {
-        background-color: #0088cc; border: none; border-radius: 5px;
-        color: #fff; padding: 4px 16px; text-align: center; text-decoration: none;
-        display: inline-block; font-size: 14px; margin: 4px 2px; cursor: pointer;
-        font-family: verdana, sans-serif; font-weight: bold;
-      }
-      .btn { background-color: #0088cc; color: #fff; border: 2px solid #D0D3D4; }
-      .button a { color: #fff; text-decoration: none; }
-
-      /* ---------- Info pages ---------- */
-      .info-box { background: #fff; border: 1px solid #d4d4d4; padding: 20px 22px; margin-bottom: 18px; }
-      .info-box p { margin: 0 0 12px; }
-      .info-box p:last-child { margin-bottom: 0; }
-
-      /* ---------- Footer ---------- */
-      .site-footer { background: var(--bar-bg); margin-top: 22px; }
-      .site-footer .wrap { padding-top: 18px; padding-bottom: 18px; text-align: center; color: #fff; font-size: 15px; }
-      .site-footer a { color: #fff; text-decoration: none; margin: 0 4px; }
-      .site-footer a:hover { text-decoration: underline; color: #fff; }
-      .site-footer .links { margin-top: 8px; }
-
-      /* ---------- Share strip (fixed bottom, MOBILE ONLY) ---------- */
-      /* Hidden on desktop; shown only at max-width 640px. No left
-         floating share rail. Share links only — no pop-ups or ads. */
-      .share-strip { display: none; }
-      .share-strip a, .share-strip button {
-        flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: center;
-        color: #fff; font-size: 13px; font-weight: bold; text-decoration: none;
-        border: 0; cursor: pointer; font-family: inherit; padding: 0 4px;
-        white-space: nowrap; overflow: hidden;
-      }
-      .share-x { background: #000000; }
-      .share-wa { background: #25d366; }
-      .share-reddit { background: #ff4500; }
-      .share-msg { background: #0084ff; }
-      .share-tg { background: #229ed9; }
-      .share-more { background: #7f8c8d; }
-      .share-strip a:hover, .share-strip button:hover { opacity: .85; }
-      @media (max-width: 640px) {
-        .share-strip {
-          position: fixed; left: 0; right: 0; bottom: 0; z-index: 1000;
-          display: flex; height: 40px;
-        }
-        .share-strip a, .share-strip button { font-size: 11px; }
-        body { padding-bottom: 40px; } /* room for the strip on phones */
-      }
-
-      @media (max-width: 640px) {
-        .logo { font-size: 20px; }
-        .search-form { flex: 1 1 100%; margin-left: 0; }
-        .heading-bar h1, .heading-bar h2 { font-size: 18px; }
-        /* Pagination stays on one line on phones: slightly smaller
-           boxes so numbers fit without wrapping or overflow. */
-        .pagination { gap: 3px; }
-        .pagination a, .pagination span { min-width: 26px; padding: 3px 5px; font-size: 12px; }
-        .pagination .dots { padding-left: 0; padding-right: 0; }
-      }
+html,body,div,a,img,.navbar{margin:0;padding:0;}
+body{font-family:Verdana, sans-serif;background:none repeat scroll 0 0 #D0D3D4;}
+/*------- NavBar -------*/
+.navbar{display: inline-block; width:100%;overflow: hidden; position: fixed;top: 0; background-color: #212121; z-index: 9;}
+.navbar .logo{float: left;}
+.navbar .logo a{text-decoration:none;color:#D0D3D4;display:block;padding:12px 5px;font-weight:bold;}
+.navbar .search-bar{float:right;width:50%;margin-right:10px;}
+/*------- Search Form -------*/
+.search-form{padding-top:5px;}
+.search-form form {display:flex;}
+.search-form input.input-field{box-sizing:border-box;-webkit-box-sizing:border-box;-moz-box-sizing:border-box;border:1px solid #C2C2C2;border-radius:3px 0px 0px 3px;-webkit-border-radius: 3px 0px 0px 3px;-moz-border-radius: 3px 0px 0px 3px;padding:7px;outline: none;width:100%;}
+.search-form .input-field:focus{border: 1px solid #0C0;}
+.search-form input[type=submit]{border:none;padding:7px 15px 7px 15px;background:#AD1457;color:#D0D3D4;border-radius:0px 3px 3px 0px;-webkit-border-radius:0px 3px 3px 0px;-moz-border-radius:0px 3px 3px 0px;font-weight:bold;}
+.search-form input[type=submit]:hover{background:#C2185B;color:#fff;}
+/*---------   Hashtags   --------*/
+.channels{text-align:center;margin-top:50px;}
+.chan{display:inline-block;}
+.channels .chan img{width:90px;height:40px;}
+/*--------- Video Player --------*/
+.thumbnail .player{color:#D0D3D4;background:#212121;text-align:center;font-size:small;margin:2px 5px;padding:2px;border-radius:2px;opacity:0.9;}
+.embed-responsive{position:relative;display:block;height:0;padding:0;overflow:hidden}.embed-responsive .embed-responsive-item,.embed-responsive embed,.embed-responsive iframe,.embed-responsive object,.embed-responsive video{position:absolute;top:0;bottom:0;left:0;width:100%;height:100%;border:0}.embed-responsive-16by9{padding-bottom:56.25%}
+/*--------- Video Tags ---------*/
+.thumbnail .tags{text-transform:capitalize;background:#212121;margin:2px;padding:2px 0px 2px 2px;border-radius:2px;}
+.tagsstyle{display:inline-block;margin:0px 0px 0px 1px;}
+.tagsstyle a{color:#FFF;font-size:small;background-color:#40403d;padding:1px 3px;text-decoration:none;}
+.tagsstyle a:hover, .tagsstyle a:focus, .tagsstyle a:active{background-color:#AD1457;}
+/*--------- Video Related---------*/
+.related{margin:5px; border-bottom:1px solid #AD1457;font-weight:bold;font-size:small;}
+.related div{display:inline-block;background:#AD1457;color:#D0D3D4;border-bottom:#AD1457;padding:5px 10px;}
+.toptitle{background:#212121;margin:0px 3px;padding:5px 0px 5px 5px;border-radius:2px;}
+.toptitle h1{font-size:15px;color:#D0D3D4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+/*------- Pagination -------*/
+.pager{text-align:center;}
+.pagination{font-size:small;font-weight:bold;display:inline-block;padding-left:0;margin:8px 0px 4px 0px;border-radius:4px}.pagination>li{display:inline}.pagination>li>a,.pagination>li>span{position:relative;float:left;padding:4px 8px;margin-left:-1px;line-height:1.42857143;color:#337ab7;text-decoration:none;background-color:#fff;border:1px solid #ddd}.pagination>li:first-child>a,.pagination>li:first-child>span{margin-left:0;border-top-left-radius:4px;border-bottom-left-radius:4px}.pagination>li:last-child>a,.pagination>li:last-child>span{border-top-right-radius:4px;border-bottom-right-radius:4px}.pagination>li>a:focus,.pagination>li>a:hover,.pagination>li>span:focus,.pagination>li>span:hover{z-index:2;color:#23527c;background-color:#eee;border-color:#ddd}.pagination>.active>a,.pagination>.active>a:focus,.pagination>.active>a:hover,.pagination>.active>span,.pagination>.active>span:focus,.pagination>.active>span:hover{z-index:3;color:#fff;cursor:default;background-color:#337ab7;border-color:#337ab7}.pagination>.disabled>a,.pagination>.disabled>a:focus,.pagination>.disabled>a:hover,.pagination>.disabled>span,.pagination>.disabled>span:focus,.pagination>.disabled>span:hover{color:#777;cursor:not-allowed;background-color:#fff;border-color:#ddd}
+/*------- Footer -------*/
+footer{background:#212121;color:#D0D3D4;margin-top:5px;padding:5px 0px 5px 0px;border-bottom:4px solid #AD1451;}
+footer .copyright{margin-top:5px;text-align:center;font-weight:bold;}
+footer .tpc{text-align:center;}
+footer .tpc a{font-size:small;color:#fff;text-decoration:none;}
+ul,li{list-style:none;margin:0;padding:0;}
+a{text-decoration:none; color:#D0D3D4;}
+.thumbnail{margin:0 auto;width:1188px;min-height:759px;}
+.thumbs{padding:5px;margin-top:10px;overflow: hidden;clear:both;}
+.thumb{width:25%;float:left;overflow:hidden;box-sizing:border-box;padding:5px 0.5%;}
+.thumb .thumb_wrap{border:2px #82b5b3 solid;background-color:#82b5b3;border-radius:2px;}
+.thumb .thumb_link{position:relative;padding-bottom:55%;display:block;background-color:#82b5b3;}
+.thumb .thumb_img{position:absolute;top:0;left:0;width:100%;height:100%;display:block;overflow:hidden;}
+.thumb .thumb_img .timer{padding:1px 5px;font-size:small;font-weight:bold;color:#FFF;background-color:#222426;opacity:0.9;}
+.thumb .thumb_img .timer{position:absolute;bottom:0;right:0.5px;}
+.thumb .thumb_title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;  padding:5px 0px 5px 2px;font-weight:bold;text-decoration:none;font-size:14px;font-style:normal;color:#222426;word-wrap:break-word;}
+@media (min-width: 950px) and (max-width: 1250px) {.thumbnail{width:100%;}.thumbs{padding:5px 5px;}.thumb{width: 25%;}}
+@media (min-width: 650px) and (max-width: 950px) {.thumbnail{width:100%;}.thumbs{padding:0px;}.thumb{width:33.3333%;}.thumb .thumb_title{font-size:13px;}}
+@media only screen and (max-width:650px) {.thumbnail {margin:0 auto;width:auto;}.thumbs{padding:0px 3px;}.thumb{width:100%;}.thumb .thumb_title{font-size:12px;}.navbar .logo a{font-size:small;}}
+/* ---- VidTheme additions: clean-content adaptations only ---- */
+/* Brand row: coloured text buttons (not images), 90x40, white bold
+   uppercase centred text, one per category. */
+.channels .chan a {
+  display: flex; align-items: center; justify-content: center;
+  width: 90px; height: 40px; color: #fff; font-weight: bold; font-size: 12px;
+  line-height: 1.2; text-align: center; text-transform: uppercase;
+  text-decoration: none; padding: 0 4px;
+}
+.channels .chan a:hover { opacity: .85; }
+.channels .chan a.active { box-shadow: inset 0 0 0 2px #fff; }
+.brand-nature { background: linear-gradient(#2eac6b, #1d7a4d); }
+.brand-travel { background: linear-gradient(#4a8fe0, #2563b8); }
+.brand-food { background: linear-gradient(#e07f3e, #b85e22); }
+.brand-ocean-life { background: linear-gradient(#2ab3bf, #177e88); }
+.brand-mountains { background: linear-gradient(#7f6fb5, #574a85); }
+.brand-city-life { background: linear-gradient(#4a5563, #2e343f); }
+.brand-winter { background: linear-gradient(#74a8c6, #4a7a98); }
+.brand-sky { background: linear-gradient(#b64fa2, #822f70); }
+/* Ad slots: empty placeholders in the reference positions. */
+.ad-slot {
+  margin: 7px auto; background: #f5f5f5; border: 1px dashed #b5b5b5;
+  color: #8a8a8a; display: flex; align-items: center; justify-content: center;
+  font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+}
+.ad-slot.wide { width: 300px; max-width: 92vw; height: 100px; }
+.ad-slot.rect { width: 300px; max-width: 92vw; height: 250px; }
+/* "Show more related videos" — link button to the tag page. */
+.loadbtn { text-align: center; }
+.button {
+  background-color: #0088cc; border: none; border-radius: 5px; color: #fff;
+  padding: 4px 16px; text-align: center; text-decoration: none;
+  display: inline-block; font-size: 14px; margin: 4px 2px; cursor: pointer;
+  font-family: verdana, sans-serif; font-weight: bold;
+}
+.btn { background-color: #0088cc; color: #fff; border: 2px solid #D0D3D4; }
+.button a { color: #fff; text-decoration: none; }
+/* Loading / info pages (no reference style exists for these). */
+.empty-note {
+  background: #fff; border: 1px solid #d4d4d4; padding: 26px 16px;
+  text-align: center; color: #555; font-size: 16px;
+}
+.info-box { background: #fff; border: 1px solid #d4d4d4; padding: 20px 22px; margin-bottom: 18px; }
+.info-box p { margin: 0 0 12px; }
+.info-box p:last-child { margin-bottom: 0; }
+/* Share strip: MOBILE ONLY. Hidden on desktop; fixed bottom bar at
+   max-width 640px. No left floating share rail. */
+.share-strip { display: none; }
+.share-strip a, .share-strip button {
+  flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 13px; font-weight: bold; text-decoration: none;
+  border: 0; cursor: pointer; font-family: inherit; padding: 0 4px;
+  white-space: nowrap; overflow: hidden;
+}
+.share-x { background: #000000; }
+.share-wa { background: #25d366; }
+.share-reddit { background: #ff4500; }
+.share-msg { background: #0084ff; }
+.share-tg { background: #229ed9; }
+.share-more { background: #7f8c8d; }
+.share-strip a:hover, .share-strip button:hover { opacity: .85; }
+@media (max-width: 640px) {
+  .share-strip {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 1000;
+    display: flex; height: 40px;
+  }
+  .share-strip a, .share-strip button { font-size: 11px; }
+  body { padding-bottom: 40px; }
+}
     </style>
   </head>
   <body>
-    <header class="site-header">
-      <div class="wrap">
-        <a class="logo" href="/">VidTheme</a>
-        <form class="search-form" id="searchForm" role="search">
-          <input type="search" id="searchInput" placeholder="Search..." aria-label="Search videos" minlength="3" maxlength="60" required />
-          <button type="submit">Search</button>
-        </form>
+    <div class="navbar">
+      <div class="logo">
+        <a href="/">VidTheme</a>
       </div>
-    </header>
-
-    <nav class="brand-row" aria-label="Categories">
-      <div class="wrap">
-        <ul id="brandRow"></ul>
+      <div class="search-bar">
+        <div class="search-form">
+          <form id="searchForm" enctype="multipart/form-data" method="POST" role="search">
+            <input type="text" class="input-field" id="searchInput" name="keywords" value="" placeholder="Search..." minlength="3" maxlength="60" required aria-label="Search videos" />
+            <input type="submit" value="Search" />
+          </form>
+        </div>
       </div>
-    </nav>
+    </div>
+    <div class="channels" aria-label="Categories">
+      <div id="brandRow"></div>
+    </div>
 
-    <main id="app"></main>
+    <div class="thumbnail" id="app"></div>
 
-    <footer class="site-footer">
-      <div class="wrap">
-        <div>&copy; 2026 VidTheme. All rights reserved.</div>
-        <div class="links">
+    <footer>
+      <div id="footerid">
+        <div class="copyright">&copy; 2026 VidTheme</div>
+        <div class="tpc">
           <a href="/terms">Terms of Use</a> -
           <a href="/privacy">Privacy Policy</a> -
           <a href="/contact">Contact Us</a> -
@@ -307,7 +164,7 @@
       </div>
     </footer>
 
-    <!-- Fixed bottom share strip: 6 coloured segments sharing the current page -->
+    <!-- Fixed bottom share strip (mobile only): 6 coloured segments sharing the current page -->
     <nav class="share-strip" aria-label="Share this page">
       <a class="share-x" data-share="x" href="#" target="_blank" rel="noopener" aria-label="Share on X">X</a>
       <a class="share-wa" data-share="wa" href="#" target="_blank" rel="noopener" aria-label="Share on WhatsApp">WhatsApp</a>
