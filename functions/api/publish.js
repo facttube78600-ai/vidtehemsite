@@ -364,6 +364,8 @@ export async function onRequestPost(context) {
       await writeFile("videos.json", current.sha, videos, "Delete video #" + video.id + " via admin");
       return json(200, { ok: true, message: "Video #" + video.id + " deleted. " + videos.length + " videos remain.", total: videos.length });
     }
+    const clash = videos.find((x) => x.slug === cleaned.slug && x.id !== cleaned.id);
+    if (clash) return json(400, { error: "slug '" + cleaned.slug + "' is already used by video #" + clash.id + " — pick a different slug" });
     const idx = videos.findIndex((v) => v.id === cleaned.id);
     if (idx >= 0) videos[idx] = cleaned;
     else videos.push(cleaned);
