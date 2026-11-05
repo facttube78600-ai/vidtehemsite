@@ -105,19 +105,20 @@
   .radio-row input { margin-right:5px; }
   /* ---------- Login gate ---------- */
   .gate-wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; background:radial-gradient(600px 400px at 15% 10%,rgba(236,0,140,.25),transparent),linear-gradient(135deg,#0f172a,#1e3a8a 55%,#1d4ed8); }
-  .gate-card { width:100%; max-width:400px; background:#fff; color:#0f172a; border-radius:20px; padding:36px 32px 28px; box-shadow:0 24px 60px rgba(2,6,23,.45); text-align:center; }
+  .gate-card { width:100%; max-width:420px; background:#fff; color:#0f172a; border-radius:20px; padding:40px 36px 30px; box-shadow:0 24px 60px rgba(2,6,23,.45); text-align:center; }
   .gate-card.shake { animation:shake .35s ease; }
   @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-7px)} 75%{transform:translateX(7px)} }
   .gate-logo { width:64px; height:64px; margin:0 auto 14px; border-radius:18px; background:linear-gradient(135deg,#ec008c,#ad1457); display:flex; align-items:center; justify-content:center; font-size:30px; }
-  .gate-card h1 { font-size:24px; margin:0; color:#0f172a; }
-  .gate-sub { color:var(--blue); font-weight:700; font-size:12px; letter-spacing:.16em; text-transform:uppercase; margin:5px 0 18px; }
-  .gate-hint { color:#64748b; font-size:14px; margin:0 0 18px; line-height:1.5; }
+  .gate-brand { color:var(--blue); font-weight:700; font-size:12px; letter-spacing:.22em; text-transform:uppercase; margin:0 0 8px; }
+  .gate-card h1 { font-size:26px; margin:0; color:#0f172a; }
+  .gate-hint { color:#64748b; font-size:14px; margin:8px 0 22px; line-height:1.5; }
   .pw-wrap { position:relative; margin-bottom:12px; }
   .pw-wrap input { margin:0; padding-right:42px; background:#fff; color:#0f172a; border:1px solid #cbd5e1; }
   .pw-eye { position:absolute; right:6px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:16px; padding:6px; }
   .gate-err { display:block; background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; border-radius:8px; padding:9px 12px; font-size:13px; font-weight:600; margin:0 0 12px; text-align:left; }
-  .gate-btn { width:100%; padding:13px; font-size:16px; margin:2px 0 16px; }
-  .gate-note { font-size:12px; color:#64748b; line-height:1.6; margin:0; text-align:left; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px 12px; }
+  .gate-btn { width:100%; padding:13px; font-size:16px; margin:2px 0 20px; }
+  .gate-feats { display:flex; justify-content:center; gap:18px; padding-top:16px; border-top:1px solid #e2e8f0; font-size:12px; color:#64748b; font-weight:600; }
+  .gate-foot { font-size:12px; color:#94a3b8; margin:12px 0 0; }
   @media (max-width:900px){ .ed{flex-direction:column} .ed .right{width:100%} }
   @media (max-width:768px){
     .wrap{flex-direction:column}
@@ -133,22 +134,22 @@
 <body>
 
 <!-- Password gate: the password is kept only in memory for this
-     browser session and is sent to /api/publish, where the server
-     checks it against the ADMIN_PASSWORD variable. It is never
-     written into any file. -->
+     browser session and is sent with each publish request, where
+     the server checks it. It is never written into any file. -->
 <div id="gate" class="gate-wrap">
   <div class="gate-card" id="gateCard">
     <div class="gate-logo">🎬</div>
-    <h1>VidTheme Admin</h1>
-    <div class="gate-sub">Video Dashboard</div>
-    <p class="gate-hint">Enter the admin password to manage videos. It is checked by the server — nothing is stored in the site code.</p>
+    <div class="gate-brand">VidTheme</div>
+    <h1>Welcome back</h1>
+    <p class="gate-hint">Sign in to manage your videos, SEO and site settings.</p>
     <div class="pw-wrap">
       <input type="password" id="gatePass" autocomplete="current-password" placeholder="Admin password" />
       <button class="pw-eye" id="gateEye" type="button" title="Show / hide password">👁</button>
     </div>
     <div class="gate-err" id="gateMsg" style="display:none"></div>
-    <button class="btn-pink gate-btn" id="gateBtn" type="button">Unlock</button>
-    <p class="gate-note">The password lives in the Cloudflare <b>ADMIN_PASSWORD</b> variable. A wrong password only shows up when you Publish — the dashboard itself opens with any password, the server is the authority.</p>
+    <button class="btn-pink gate-btn" id="gateBtn" type="button">Sign in</button>
+    <div class="gate-feats"><span>🎬 Videos</span><span>🔍 SEO</span><span>🚀 Publish live</span></div>
+    <p class="gate-foot">🔒 Secure admin area — authorized access only</p>
   </div>
 </div>
 
@@ -421,16 +422,16 @@
         <h1>Settings</h1>
         <div class="card">
           <h2>How publishing works</h2>
-          <p>Videos are stored in <code>videos.json</code> in the GitHub repo <code>facttube78600-ai/vidtehemsite</code> (branch <code>main</code>). The dashboard saves through <code>/api/publish</code>, a Cloudflare Pages Function that commits the updated file to GitHub. The public site fetches the latest <code>videos.json</code> on every load, so published videos appear without a redeploy.</p>
+          <p>Videos are stored in the site's video library. When you publish from this dashboard, your changes are saved and the public site picks them up automatically — new and updated videos appear without a redeploy.</p>
           <p>Live site: <a href="https://vidtehemsite.pages.dev/" target="_blank" rel="noopener">https://vidtehemsite.pages.dev/</a></p>
         </div>
         <div class="card">
-          <h2>Credentials</h2>
-          <p><b>ADMIN_PASSWORD</b> and <b>GITHUB_TOKEN</b> live in Cloudflare Pages environment variables — never in code, never in this dashboard. The token is fine-grained, this repository only, with Contents: Read and write. There are no password or token fields anywhere in this dashboard.</p>
+          <h2>Security</h2>
+          <p>Your admin password is checked by the server every time you publish. It is never stored in the site code or anywhere in this dashboard — there are no password or token fields here.</p>
         </div>
         <div class="card">
           <h2>Data</h2>
-          <p class="muted">Quick Drafts and Default Meta are stored in this browser only. Everything else lives in GitHub.</p>
+          <p class="muted">Quick Drafts and Default Meta are stored in this browser only. Everything else is stored with the site.</p>
           <button class="btn" id="exportBtn2" type="button">⬇ Export videos.json</button>
         </div>
       </div>
