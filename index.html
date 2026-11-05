@@ -33,7 +33,7 @@
         font-family: Arial, Helvetica, sans-serif;
         font-size: 15px;
         line-height: 1.45;
-        padding-bottom: 40px; /* room for the fixed share strip at the bottom */
+        /* No bottom padding on desktop: the share strip is mobile-only. */
       }
       a { color: var(--page-blue); }
       img { display: block; max-width: 100%; }
@@ -50,7 +50,7 @@
          one colour only, no icon, no coloured part (reference style). */
       .logo {
         color: #fff; text-decoration: none; font-weight: bold;
-        font-size: 30px; letter-spacing: .5px; line-height: 1; white-space: nowrap;
+        font-size: 20px; letter-spacing: .5px; line-height: 1; white-space: nowrap;
       }
       .search-form {
         margin-left: auto; display: flex; gap: 0; flex: 0 1 460px; min-width: 240px;
@@ -74,13 +74,28 @@
         list-style: none; margin: 0; padding: 0;
         display: flex; flex-wrap: wrap; justify-content: center; gap: 4px;
       }
-      .brand-row a { display: block; line-height: 0; }
-      .brand-row a img { width: 95px; height: 42px; object-fit: cover; display: block; }
-      .brand-row a:hover img { opacity: .85; }
+      /* Brand row: COLOURED TEXT BUTTONS (not images), ~95x50, vertical
+         gradient, white bold uppercase centred text, 4px gaps. */
+      .brand-row a {
+        display: flex; align-items: center; justify-content: center;
+        width: 95px; height: 50px; color: #fff; text-decoration: none;
+        font-weight: bold; font-size: 12px; line-height: 1.2; text-align: center;
+        text-transform: uppercase; padding: 0 4px;
+      }
+      .brand-row a:hover { opacity: .85; }
+      .brand-row a.active { box-shadow: inset 0 0 0 2px #fff; }
+      .brand-nature { background: linear-gradient(#2eac6b, #1d7a4d); }
+      .brand-travel { background: linear-gradient(#4a8fe0, #2563b8); }
+      .brand-food { background: linear-gradient(#e07f3e, #b85e22); }
+      .brand-ocean-life { background: linear-gradient(#2ab3bf, #177e88); }
+      .brand-mountains { background: linear-gradient(#7f6fb5, #574a85); }
+      .brand-city-life { background: linear-gradient(#4a5563, #2e343f); }
+      .brand-winter { background: linear-gradient(#74a8c6, #4a7a98); }
+      .brand-sky { background: linear-gradient(#b64fa2, #822f70); }
 
       /* ---------- Ad slots (empty placeholders) ---------- */
       .ad-slot {
-        margin: 14px auto; background: #f5f5f5; border: 1px dashed #b5b5b5;
+        margin: 7px auto; background: #f5f5f5; border: 1px dashed #b5b5b5;
         color: #8a8a8a; display: flex; align-items: center; justify-content: center;
         font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
       }
@@ -119,34 +134,18 @@
       @media (max-width: 1020px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
       @media (max-width: 640px)  { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
-      .card {
-        display: block; min-width: 0; background: var(--card-bg); text-decoration: none;
-        border: 1px solid #d4d4d4;
-      }
-      .card .thumb { display: block; position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: #111; }
-      .card .thumb img { width: 100%; height: 100%; object-fit: cover; }
-      .card .duration {
+      /* Reference card structure: .thumb_wrap > a.thumb_link (image +
+         timer only) + sibling .thumb_title strip OUTSIDE the link. */
+      .thumb_wrap { min-width: 0; background: var(--card-bg); border: 1px solid #d4d4d4; }
+      .thumb_link { display: block; text-decoration: none; }
+      .thumb_img { display: block; position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: #111; }
+      .thumb_img img { width: 100%; height: 100%; object-fit: cover; }
+      .timer {
         position: absolute; right: 5px; bottom: 5px;
         background: rgba(0, 0, 0, .75); color: #fff;
         font-size: 12px; font-weight: bold; padding: 1px 6px; border-radius: 2px;
       }
-      .card .play-hint {
-        position: absolute; inset: 0; display: none;
-        align-items: center; justify-content: center;
-        background: rgba(0, 0, 0, .28);
-      }
-      .card:hover .play-hint { display: flex; }
-      .card .play-hint i {
-        width: 44px; height: 44px; border-radius: 50%;
-        background: var(--accent); position: relative;
-      }
-      .card .play-hint i::after {
-        content: ""; position: absolute; top: 50%; left: 54%;
-        transform: translate(-50%, -50%);
-        border-style: solid; border-width: 8px 0 8px 13px;
-        border-color: transparent transparent transparent #fff;
-      }
-      .card .strip {
+      .thumb_title {
         display: block;
         background: var(--strip-bg); color: var(--strip-text);
         font-weight: bold; font-size: 14px; padding: 7px 9px;
@@ -215,13 +214,17 @@
       }
       .related-heading .related-line { height: 1px; background: #ad1457; }
 
-      .show-more-row { text-align: center; margin: 18px 0 6px; }
-      .show-more {
-        border: 0; cursor: pointer; font-family: inherit;
-        background: var(--accent); color: #fff; font-weight: bold;
-        font-size: 16px; padding: 11px 42px; border-radius: 3px;
+      /* "Show more related videos" — a LINK button to the tag page, not
+         a JS load-more: background #0088cc, radius 5px, white bold 14px. */
+      .loadbtn { text-align: center; margin: 18px 0 6px; }
+      .button {
+        background-color: #0088cc; border: none; border-radius: 5px;
+        color: #fff; padding: 4px 16px; text-align: center; text-decoration: none;
+        display: inline-block; font-size: 14px; margin: 4px 2px; cursor: pointer;
+        font-family: verdana, sans-serif; font-weight: bold;
       }
-      .show-more:hover { background: var(--accent-dark); }
+      .btn { background-color: #0088cc; color: #fff; border: 2px solid #D0D3D4; }
+      .button a { color: #fff; text-decoration: none; }
 
       /* ---------- Info pages ---------- */
       .info-box { background: #fff; border: 1px solid #d4d4d4; padding: 20px 22px; margin-bottom: 18px; }
@@ -235,27 +238,15 @@
       .site-footer a:hover { text-decoration: underline; color: #fff; }
       .site-footer .links { margin-top: 8px; }
 
-      /* ---------- Share strip (fixed bottom) + share rail (left) ---------- */
-      /* Reference style: 6 coloured segments sharing the current page.
-         Share links only — no pop-ups, pop-unders or floating ads. */
-      .share-strip {
-        position: fixed; left: 0; right: 0; bottom: 0; z-index: 1000;
-        display: flex; height: 40px;
-      }
+      /* ---------- Share strip (fixed bottom, MOBILE ONLY) ---------- */
+      /* Hidden on desktop; shown only at max-width 640px. No left
+         floating share rail. Share links only — no pop-ups or ads. */
+      .share-strip { display: none; }
       .share-strip a, .share-strip button {
         flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: center;
         color: #fff; font-size: 13px; font-weight: bold; text-decoration: none;
         border: 0; cursor: pointer; font-family: inherit; padding: 0 4px;
         white-space: nowrap; overflow: hidden;
-      }
-      .share-rail {
-        position: fixed; left: 0; top: 50%; transform: translateY(-50%);
-        z-index: 1000; display: flex; flex-direction: column;
-      }
-      .share-rail a, .share-rail button {
-        width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
-        color: #fff; font-size: 13px; font-weight: bold; text-decoration: none;
-        border: 0; cursor: pointer; font-family: inherit; padding: 0;
       }
       .share-x { background: #000000; }
       .share-wa { background: #25d366; }
@@ -263,19 +254,22 @@
       .share-msg { background: #0084ff; }
       .share-tg { background: #229ed9; }
       .share-more { background: #7f8c8d; }
-      .share-strip a:hover, .share-strip button:hover,
-      .share-rail a:hover, .share-rail button:hover { opacity: .85; }
-      @media (max-width: 1400px) { .share-rail { display: none; } }
+      .share-strip a:hover, .share-strip button:hover { opacity: .85; }
       @media (max-width: 640px) {
+        .share-strip {
+          position: fixed; left: 0; right: 0; bottom: 0; z-index: 1000;
+          display: flex; height: 40px;
+        }
         .share-strip a, .share-strip button { font-size: 11px; }
+        body { padding-bottom: 40px; } /* room for the strip on phones */
       }
 
       @media (max-width: 640px) {
-        .logo { font-size: 25px; }
+        .logo { font-size: 20px; }
         .search-form { flex: 1 1 100%; margin-left: 0; }
         .heading-bar h1, .heading-bar h2 { font-size: 18px; }
         /* Pagination stays on one line on phones: slightly smaller
-           boxes so numbers + « » fit without wrapping or overflow. */
+           boxes so numbers fit without wrapping or overflow. */
         .pagination { gap: 3px; }
         .pagination a, .pagination span { min-width: 26px; padding: 3px 5px; font-size: 12px; }
         .pagination .dots { padding-left: 0; padding-right: 0; }
@@ -287,7 +281,7 @@
       <div class="wrap">
         <a class="logo" href="/">VidTheme</a>
         <form class="search-form" id="searchForm" role="search">
-          <input type="search" id="searchInput" placeholder="Search videos&hellip;" aria-label="Search videos" />
+          <input type="search" id="searchInput" placeholder="Search..." aria-label="Search videos" minlength="3" maxlength="60" required />
           <button type="submit">Search</button>
         </form>
       </div>
@@ -305,9 +299,9 @@
       <div class="wrap">
         <div>&copy; 2026 VidTheme. All rights reserved.</div>
         <div class="links">
-          <a href="/terms">Terms of Use</a> &middot;
-          <a href="/privacy">Privacy Policy</a> &middot;
-          <a href="/contact">Contact</a> &middot;
+          <a href="/terms">Terms of Use</a> -
+          <a href="/privacy">Privacy Policy</a> -
+          <a href="/contact">Contact Us</a> -
           <a href="/dmca">DMCA</a>
         </div>
       </div>
@@ -322,16 +316,6 @@
       <a class="share-tg" data-share="tg" href="#" target="_blank" rel="noopener" aria-label="Share on Telegram">Telegram</a>
       <button class="share-more" data-share="more" type="button" aria-label="Share this page">Share</button>
     </nav>
-
-    <!-- Left floating share rail: same 6 share links, hidden on narrower screens -->
-    <aside class="share-rail" aria-label="Share this page">
-      <a class="share-x" data-share="x" href="#" target="_blank" rel="noopener" aria-label="Share on X" title="X">X</a>
-      <a class="share-wa" data-share="wa" href="#" target="_blank" rel="noopener" aria-label="Share on WhatsApp" title="WhatsApp">W</a>
-      <a class="share-reddit" data-share="reddit" href="#" target="_blank" rel="noopener" aria-label="Share on Reddit" title="Reddit">R</a>
-      <a class="share-msg" data-share="msg" href="#" target="_blank" rel="noopener" aria-label="Share on Messenger" title="Messenger">M</a>
-      <a class="share-tg" data-share="tg" href="#" target="_blank" rel="noopener" aria-label="Share on Telegram" title="Telegram">T</a>
-      <button class="share-more" data-share="more" type="button" aria-label="Share this page" title="Share">&#8599;</button>
-    </aside>
 
     <script src="assets/app.js"></script>
   </body>
