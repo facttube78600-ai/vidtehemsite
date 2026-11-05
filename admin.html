@@ -147,9 +147,10 @@
 </head>
 <body>
 
-<!-- Password gate: the password is kept only in memory for this
-     browser session and is sent with each publish request, where
-     the server checks it. It is never written into any file. -->
+<!-- Password gate: the password is remembered on this device only
+     (localStorage, so a refresh keeps you signed in) and is sent
+     with each publish request, where the server checks it. It is
+     never written into any file. "Log out" forgets it. -->
 <div id="gate" class="gate-wrap">
   <div class="gate-card" id="gateCard">
     <div class="gate-logo">🎬</div>
@@ -473,7 +474,7 @@
   var LS_SUFFIX = "vt_def_suffix";
   var LS_DEFMETA = "vt_def_meta";
 
-  var password = "";           // session only — never saved to a file
+  var password = "";           // remembered on this device only (localStorage), so a refresh keeps you signed in; never saved to a file
   var videos = [];              // server videos + local quick drafts, sorted by id
   var localDrafts = [];
   var editingId = null;
@@ -499,6 +500,7 @@
   }
   function storeGet(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
   function storeSet(k, v) { try { window.localStorage.setItem(k, v); } catch (e) { /* storage unavailable */ } }
+  function storeDel(k) { try { window.localStorage.removeItem(k); } catch (e) { /* storage unavailable */ } }
 
   /* ---------------- Site settings (site-settings.json) ---------------- */
   var SETTINGS_URL = "https://raw.githubusercontent.com/facttube78600-ai/vidtehemsite/main/site-settings.json";
@@ -1482,6 +1484,7 @@
   function unlock() {
     password = $("gatePass").value;
     if (!password) { gateError("Enter the admin password."); return; }
+    storeSet("vt_admin_pass", password); // stay signed in on this device across refreshes
     $("gate").classList.add("hidden");
     $("app").classList.remove("hidden");
     loadLocalDrafts();
@@ -1521,7 +1524,18 @@
     var p = $("gatePass");
     p.type = p.type === "password" ? "text" : "password";
   });
-  $("logoutBtn").addEventListener("click", function () { window.location.reload(); });
+  $("logoutBtn").addEventListener("click", function () {
+    storeDel("vt_admin_pass"); // forget the saved password on this device
+    password = "";
+    window.location.reload();
+  });
+
+  /* Stay signed in: if this device already has a saved password,
+     open the dashboard straight away (no gate on refresh). */
+  (function autoUnlock() {
+    var saved = storeGet("vt_admin_pass");
+    if (saved) { $("gatePass").value = saved; unlock(); }
+  })();
 
   /* Test handle (used by the automated smoke test only). */
   window.__vt = {
