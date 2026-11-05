@@ -1,1 +1,113 @@
-{"ads":{"homeBottomRect":{"code":"","enabled":false},"homeBottomWide":{"code":"","enabled":false},"homeTop":{"code":"","enabled":false},"videoBottomRect":{"code":"","enabled":false},"videoBottomWide":{"code":"","enabled":false},"videoMidRect1":{"code":"","enabled":false},"videoMidRect2":{"code":"","enabled":false},"videoMidWide":{"code":"","enabled":false},"videoTop":{"code":"","enabled":false}},"brands":[{"color":"#24975c","enabled":true,"image":"","label":"Nature","link":"/tags/nature.html"},{"color":"#3277d6","enabled":true,"image":"","label":"Travel","link":"/tags/travel.html"},{"color":"#d36e2e","enabled":true,"image":"","label":"Food","link":"/tags/food.html"},{"color":"#1f9aa6","enabled":true,"image":"","label":"Ocean Life","link":"/tags/ocean-life.html"},{"color":"#6c5ca1","enabled":true,"image":"","label":"Mountains","link":"/tags/mountains.html"},{"color":"#3c4451","enabled":true,"image":"","label":"City Life","link":"/tags/city-life.html"},{"color":"#5e93b5","enabled":true,"image":"","label":"Winter","link":"/tags/winter.html"},{"color":"#a13c8e","enabled":true,"image":"","label":"Sky","link":"/tags/sky.html"}],"headerCode":"","ogImage":"https://vidtehemsite.pages.dev/assets/og-image.svg","siteDescription":"VidTheme — browse free videos by category. Nature, Travel, Food, Ocean Life, Mountains, City Life, Winter and Sky videos, all in one place.","siteKeywords":"vidtheme, nature videos, travel videos, food videos, ocean life videos, mountain videos, city life videos, winter videos, sky videos, free videos","siteTitle":"VidTheme: Free HD Videos by Category","twitterCard":"summary_large_image"}
+{
+  "ads": {
+    "homeTop": {
+      "enabled": false,
+      "code": ""
+    },
+    "homeBottomRect": {
+      "enabled": false,
+      "code": ""
+    },
+    "homeBottomWide": {
+      "enabled": false,
+      "code": ""
+    },
+    "videoTop": {
+      "enabled": false,
+      "code": ""
+    },
+    "videoMidRect1": {
+      "enabled": false,
+      "code": ""
+    },
+    "videoMidWide": {
+      "enabled": false,
+      "code": ""
+    },
+    "videoMidRect2": {
+      "enabled": false,
+      "code": ""
+    },
+    "videoBottomRect": {
+      "enabled": false,
+      "code": ""
+    },
+    "videoBottomWide": {
+      "enabled": false,
+      "code": ""
+    }
+  },
+  "brands": [
+    {
+      "label": "Nature",
+      "color": "#24975c",
+      "image": "/assets/uploads/1793906485242-puretaboo.jpg",
+      "alt": "Puretaboo",
+      "link": "/tags/nature.html",
+      "enabled": true
+    },
+    {
+      "label": "Travel",
+      "color": "#3277d6",
+      "image": "",
+      "alt": "",
+      "link": "/tags/travel.html",
+      "enabled": true
+    },
+    {
+      "label": "Food",
+      "color": "#d36e2e",
+      "image": "",
+      "alt": "",
+      "link": "/tags/food.html",
+      "enabled": true
+    },
+    {
+      "label": "Ocean Life",
+      "color": "#1f9aa6",
+      "image": "",
+      "alt": "",
+      "link": "/tags/ocean-life.html",
+      "enabled": true
+    },
+    {
+      "label": "Mountains",
+      "color": "#6c5ca1",
+      "image": "",
+      "alt": "",
+      "link": "/tags/mountains.html",
+      "enabled": true
+    },
+    {
+      "label": "City Life",
+      "color": "#3c4451",
+      "image": "",
+      "alt": "",
+      "link": "/tags/city-life.html",
+      "enabled": true
+    },
+    {
+      "label": "Winter",
+      "color": "#5e93b5",
+      "image": "",
+      "alt": "",
+      "link": "/tags/winter.html",
+      "enabled": true
+    },
+    {
+      "label": "Sky",
+      "color": "#a13c8e",
+      "image": "",
+      "alt": "",
+      "link": "/tags/sky.html",
+      "enabled": true
+    }
+  ],
+  "headerCode": "",
+  "ogImage": "https://vidtehemsite.pages.dev/assets/og-image.svg",
+  "siteDescription": "VidTheme — browse free videos by category. Nature, Travel, Food, Ocean Life, Mountains, City Life, Winter and Sky videos, all in one place.",
+  "siteKeywords": "vidtheme, nature videos, travel videos, food videos, ocean life videos, mountain videos, city life videos, winter videos, sky videos, free videos",
+  "siteTitle": "VidTheme: Free HD Videos by Category",
+  "twitterCard": "summary_large_image",
+  "ogImageAlt": ""
+}
