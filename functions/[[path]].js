@@ -362,7 +362,9 @@ export async function onRequest(context) {
   const res = await context.env.ASSETS.fetch(new URL("/index.html", url));
   let html = await res.text();
 
-  // Video page: inject the per-video meta; unknown slug or draft = 404.
+  // Video page: inject the per-video meta; unknown slug, draft or
+  // wrong category = 404 (a video lives only under its own main
+  // category — the same slug under another category is not its URL).
   if (videoMatch && isCategorySlug(videoMatch[1])) {
     const slug = videoMatch[2];
     const list = await loadJsonAsset(context, url, "videos.json");
@@ -374,7 +376,7 @@ export async function onRequest(context) {
         break;
       }
     }
-    if (!video || video.status === "draft") {
+    if (!video || video.status === "draft" || slugify(video.category || (video.tags && video.tags[0]) || "") !== videoMatch[1]) {
       return new Response(notFoundHtml(), {
         status: 404,
         headers: { "Content-Type": "text/html; charset=utf-8" },
