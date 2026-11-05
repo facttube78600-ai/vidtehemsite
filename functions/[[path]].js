@@ -1,22 +1,32 @@
 /* VidTheme — clean-URL router + server-side meta tags (Cloudflare Pages Function).
  *
  * Serves index.html for every page the front-end app renders
- * (homepage, /page/NN.html, /video/<slug>-<id>.html,
+ * (homepage, /page/NN.html, /<category>/<slug>-<id>.html,
  * /tags/<slug>.html, /search, /terms, /privacy, /contact, /dmca)
  * so a direct visit or refresh on a clean URL works.
  *
  * Server-side meta: view-source and crawlers see the real per-page
- * meta tags, not just the generic shell head. For a video page the
- * function loads videos.json, finds the video and rewrites the
- * <head> block (title, keywords, description, canonical, Open Graph
- * incl. og:video, Twitter Card, VideoObject JSON-LD) before serving.
- * Tag, pagination and search pages get their own meta the same way.
+ * meta tags, not just the generic shell head. The site-wide meta
+ * (title, description, keywords, OG image, Twitter card) comes
+ * from site-settings.json, managed in the admin dashboard
+ * (Site > Site Meta); the header code from the same file
+ * (Analytics, Search Console, …) is injected into <head> of
+ * every page — it is always on and independent of the Ads
+ * switches. For a video page the function loads videos.json,
+ * finds the video and rewrites the <head> block (title, keywords,
+ * description, canonical, Open Graph incl. og:video, Twitter
+ * Card, VideoObject JSON-LD) before serving. Tag, pagination
+ * and search pages get their own meta the same way.
  * The client-side setMeta() in app.js still runs afterwards and
  * upserts the same values, so nothing changes in the browser.
  *
+ * Legacy video URLs /video/<slug>-<id>.html 301-redirect to the
+ * category URL /<category>/<slug>-<id>.html.
+ *
  * Passes through untouched: /api/*, /admin.html, /videos.json,
- * /assets/* and any other real file. Unknown video ids and drafts
- * get a real 404; anything else unknown gets a real 404 too. */
+ * /site-settings.json, /assets/* and any other real file.
+ * Unknown video ids and drafts get a real 404; anything else
+ * unknown gets a real 404 too. */
 
 const SITE_URL = "https://vidtehemsite.pages.dev";
 const HOME_TITLE = "VidTheme: Free HD Videos by Category";
@@ -37,6 +47,9 @@ function esc(s) {
 function slugify(text) {
   return String(text).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 }
+function isCategorySlug(slug) {
+  return TAGS.some((t) => slugify(t) === slug);
+}
 function absUrl(u) {
   if (!u) return "";
   if (/^https?:\/\//i.test(u)) return u;
@@ -54,6 +67,19 @@ function durationSeconds(d) {
 function isoDuration(d) {
   var total = durationSeconds(d);
   return "PT" + Math.floor(total / 60) + "M" + (total % 60) + "S";
+}
+
+/* Site-wide values from site-settings.json, with the built-in
+   defaults when a setting is missing. */
+function siteMeta(settings) {
+  return {
+    title: (settings && settings.siteTitle) || HOME_TITLE,
+    description: (settings && settings.siteDescription) || HOME_DESC,
+    keywords: (settings && settings.siteKeywords) || HOME_KEYWORDS,
+    ogImage: absUrl((settings && settings.ogImage) || HOME_OG_IMAGE),
+    twitterCard: (settings && settings.twitterCard) || "summary_large_image",
+    headerCode: (settings && settings.headerCode) || "",
+  };
 }
 
 /* Build the <head> meta block (title through Twitter tags, plus an
@@ -109,15 +135,31 @@ function injectMeta(html, o) {
   return out;
 }
 
-function videoMeta(v) {
+/* Header code (Analytics, Search Console, …) is always on: it is
+   injected into <head> of every served page, wrapped in markers
+   so the client-side fallback can tell it is already there. */
+function injectHeader(html, code) {
+  if (!code) return html;
+  return html.replace(
+    "</head>",
+    "<!-- vt-header-code-start -->" + code + "<!-- vt-header-code-end -->\n</head>"
+  );
+}
+
+function videoUrl(v) {
+  var cat = slugify(v.category || (v.tags && v.tags[0]) || "video");
+  return "/" + cat + "/" + (v.slug || "video") + "-" + v.id + ".html";
+}
+
+function videoMeta(v, site) {
   var vTitle = v.seo_title || v.title || "Untitled video";
   var tags = v.tags && v.tags.length ? v.tags : v.category ? [v.category] : [];
   var cat = (v.category || tags[0] || "video").toLowerCase();
   var vDesc =
     v.meta_description || "Watch " + v.title + " on VidTheme — free " + cat + " video.";
   var vKw = v.meta_keywords || tags.join(", ");
-  var vCanon = v.canonical || SITE_URL + "/video/" + (v.slug || "video") + "-" + v.id + ".html";
-  var vOgImg = absUrl(v.og_image || v.thumbnail || v.thumb || "/assets/og-image.svg");
+  var vCanon = v.canonical || SITE_URL + videoUrl(v);
+  var vOgImg = absUrl(v.og_image || v.thumbnail || v.thumb || site.ogImage);
   return {
     title: vTitle + " | VidTheme",
     description: vDesc,
@@ -144,34 +186,52 @@ function videoMeta(v) {
   };
 }
 
-function tagMeta(tag, page) {
+function homeMeta(site) {
+  return {
+    title: site.title,
+    description: site.description,
+    keywords: site.keywords,
+    canonical: SITE_URL + "/",
+    ogType: "website",
+    ogImage: site.ogImage,
+    twitterCard: site.twitterCard,
+  };
+}
+
+function tagMeta(tag, page, site) {
   return {
     title: tag + " Videos | VidTheme",
     description: "Watch free " + tag.toLowerCase() + " videos on VidTheme.",
-    keywords: tag.toLowerCase() + " videos, " + HOME_KEYWORDS,
+    keywords: tag.toLowerCase() + " videos, " + site.keywords,
     canonical: SITE_URL + "/tags/" + slugify(tag) + ".html" + (page > 1 ? "?p=" + page : ""),
     ogType: "website",
+    ogImage: site.ogImage,
+    twitterCard: site.twitterCard,
   };
 }
 
-function pageMeta(n) {
+function pageMeta(n, site) {
   return {
     title: "Latest Videos — Page " + n + " | VidTheme",
-    description: HOME_DESC,
-    keywords: HOME_KEYWORDS,
+    description: site.description,
+    keywords: site.keywords,
     canonical: SITE_URL + "/page/" + String(n).padStart(2, "0") + ".html",
     ogType: "website",
+    ogImage: site.ogImage,
+    twitterCard: site.twitterCard,
   };
 }
 
-function searchMeta(q) {
+function searchMeta(q, site) {
   return {
     title: "Search: " + q + " — VidTheme",
     description: 'Search results for "' + q + '" on VidTheme.',
-    keywords: q + ", " + HOME_KEYWORDS,
+    keywords: q + ", " + site.keywords,
     canonical: SITE_URL + "/search?q=" + encodeURIComponent(q),
     robots: "noindex, follow",
     ogType: "website",
+    ogImage: site.ogImage,
+    twitterCard: site.twitterCard,
   };
 }
 
@@ -183,14 +243,13 @@ function notFoundHtml() {
   );
 }
 
-async function loadVideos(context, url) {
+async function loadJsonAsset(context, url, name) {
   try {
-    const r = await context.env.ASSETS.fetch(new URL("/videos.json", url));
-    if (!r.ok) return [];
-    const data = await r.json();
-    return Array.isArray(data) ? data : data.videos || [];
+    const r = await context.env.ASSETS.fetch(new URL("/" + name, url));
+    if (!r.ok) return null;
+    return await r.json();
   } catch (e) {
-    return [];
+    return null;
   }
 }
 
@@ -203,6 +262,7 @@ export async function onRequest(context) {
     path.startsWith("/api/") ||
     path === "/admin.html" ||
     path === "/videos.json" ||
+    path === "/site-settings.json" ||
     path === "/index.html" ||
     path === "/favicon.ico" ||
     path.startsWith("/assets/")
@@ -219,13 +279,15 @@ export async function onRequest(context) {
     });
   }
 
-  const videoMatch = /^\/video\/.+-(\d+)\.html$/.exec(path);
+  const legacyVideoMatch = /^\/video\/.+-(\d+)\.html$/.exec(path);
+  const videoMatch = /^\/([a-z0-9-]+)\/(.+)-(\d+)\.html$/.exec(path);
+  const isVideo = !!legacyVideoMatch || (!!videoMatch && isCategorySlug(videoMatch[1]));
   const pageMatch = /^\/page\/(\d+)\.html$/.exec(path);
   const tagMatch = /^\/tags\/([a-z0-9-]+)\.html$/.exec(path);
   const isPage =
     path === "/" ||
     !!pageMatch ||
-    !!videoMatch ||
+    isVideo ||
     !!tagMatch ||
     path === "/search" ||
     /^\/(terms|privacy|contact|dmca)$/.test(path);
@@ -237,15 +299,16 @@ export async function onRequest(context) {
     });
   }
 
-  const res = await context.env.ASSETS.fetch(new URL("/index.html", url));
-  let html = await res.text();
+  const settings = await loadJsonAsset(context, url, "site-settings.json");
+  const site = siteMeta(settings);
 
-  // Video page: inject the per-video meta; unknown id or draft = 404.
-  if (videoMatch) {
-    const id = parseInt(videoMatch[1], 10);
-    const list = await loadVideos(context, url);
+  // Legacy video URL: 301 to the category URL.
+  if (legacyVideoMatch) {
+    const id = parseInt(legacyVideoMatch[1], 10);
+    const list = await loadJsonAsset(context, url, "videos.json");
+    const arr = Array.isArray(list) ? list : (list && list.videos) || [];
     let video = null;
-    for (const v of list) {
+    for (const v of arr) {
       if (v.id === id) {
         video = v;
         break;
@@ -257,20 +320,50 @@ export async function onRequest(context) {
         headers: { "Content-Type": "text/html; charset=utf-8" },
       });
     }
-    html = injectMeta(html, videoMeta(video));
+    return Response.redirect(SITE_URL + videoUrl(video), 301);
+  }
+
+  const res = await context.env.ASSETS.fetch(new URL("/index.html", url));
+  let html = await res.text();
+
+  // Video page: inject the per-video meta; unknown id or draft = 404.
+  if (videoMatch) {
+    const id = parseInt(videoMatch[3], 10);
+    const list = await loadJsonAsset(context, url, "videos.json");
+    const arr = Array.isArray(list) ? list : (list && list.videos) || [];
+    let video = null;
+    for (const v of arr) {
+      if (v.id === id) {
+        video = v;
+        break;
+      }
+    }
+    if (!video || video.status === "draft") {
+      return new Response(notFoundHtml(), {
+        status: 404,
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+      });
+    }
+    html = injectMeta(html, videoMeta(video, site));
   } else if (tagMatch) {
     const tag = TAGS.find((t) => slugify(t) === tagMatch[1]);
     if (tag) {
       const p = parseInt(url.searchParams.get("p") || "1", 10) || 1;
-      html = injectMeta(html, tagMeta(tag, p));
+      html = injectMeta(html, tagMeta(tag, p, site));
     }
   } else if (pageMatch) {
     const n = parseInt(pageMatch[1], 10) || 1;
-    if (n > 1) html = injectMeta(html, pageMeta(n));
+    if (n > 1) html = injectMeta(html, pageMeta(n, site));
+    else html = injectMeta(html, homeMeta(site));
   } else if (path === "/search") {
     const q = url.searchParams.get("q") || "";
-    if (q) html = injectMeta(html, searchMeta(q));
+    if (q) html = injectMeta(html, searchMeta(q, site));
+    else html = injectMeta(html, homeMeta(site));
+  } else {
+    html = injectMeta(html, homeMeta(site));
   }
+
+  html = injectHeader(html, site.headerCode);
 
   return new Response(html, {
     status: 200,
